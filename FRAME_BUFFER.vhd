@@ -4,7 +4,7 @@ use IEEE.numeric_std.all;
 use work.all;
 
 entity FRAME_BUFFER is
-	generic(H_RES: integer := 720);
+	generic(H_RES: integer := 720 - 1);
 	port(
 		-- REMINDER!!!
 		-- ALL NAMES OF PORTS MENTIONED BY DEREK 
@@ -47,7 +47,7 @@ end FRAME_BUFFER;
 
 architecture behave of FRAME_BUFFER is
 	-- Constants
-	constant V_RES: integer := 625; -- 5^4
+	constant V_RES: integer := 625 - 1; -- 5^4
 	constant H_RATE: integer := 15625; -- 5^5
 	constant V_RATE: integer := 25; -- 5^2
 	-- The highest frequency in this module is 5.5 MHz.
@@ -63,7 +63,7 @@ begin
 	reg_line_prefetch : entity work.RegFile(behave)
 	generic map (M => 20, N => 8)
 	port map (
-		WD => std_logic_vector(reg_write_data),
+		WD => std_logic_vector(VIDEO_PIXEL_IN),
 		WAddr => std_logic_vector(reg_write_addr),
 		RA => std_logic_vector(reg_read_addr_A),
 		RB => std_logic_vector(reg_read_addr_B),
@@ -76,10 +76,10 @@ begin
 		QB => reg_read_output
 	);
 	
-	-- FSM
-	FSM: process(clk, reset)
+	-- ReadOut
+	READ_OUT: process(clk, reset, en)
 		variable Xout_temp, Yout_temp: signed(18-1 downto 0); 
-		variable Xclamping, Yclamping: unsigned(18-1 downto 0);
+		variable Xclamping, Yclamping: signed(16-1 downto 0);
 		variable Rout_temp, Gout_temp, Bout_temp, Iout_temp: unsigned(8-1 downto 0); 
 	begin
 		if(reset = '1') then
@@ -109,8 +109,8 @@ begin
 				-- Transformation
 				Xout_temp := ( signed(H_IN) - H_RES / 2 ) * Zoom / 100 + signed(H_IN) + signed(H_Position);
 				Yout_temp := ( signed(V_IN) - V_RES / 2 ) * Zoom / 100 + signed(V_IN) + signed(V_Position);
-				Xclamping := H_RES * H_Blanking / 100;
-				Yclamping := V_RES * V_Blanking / 100;
+				Xclamping := H_RES * signed(H_Blanking) / 100;
+				Yclamping := V_RES * signed(V_Blanking) / 100;
 				
 				-- Clamping and Blanking
 				if (((Xout_temp < 0) or (Xout_temp > H_RES - 1))
@@ -132,7 +132,6 @@ begin
 					Bout <= Bout_temp;
 					Iout <= Iout_temp;
 				end if;
-				
 			end if;
 		end if;
 	end process;
