@@ -15,7 +15,7 @@ entity FRAME_BUFFER is
 		clk, en, reset: in std_logic;
 		
 		-- Reset signal for notifying a new video frame coming in
-		clk_video_in: in std_logic; 
+		clk_video_pixel_in: in std_logic; 
 		
 		-- Video frames input, single pixel with 8 bit depth in R-G-B
 		VIDEO_PIXEL_IN: in std_logic_vector(24-1 downto 0);
@@ -71,7 +71,7 @@ begin
 		ReadA => en,
 		ReadB => en,
 		reset => reset, 
-		clk => clk, 
+		clk => clk_video_pixel_in, 
 		QA => reg_read_internal,
 		QB => reg_read_output
 	);
