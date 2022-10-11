@@ -44,16 +44,11 @@ architecture test of DCO_test_bench is
 
   stimuli_generator: process
   begin
-  wait for 5*clockcycle;
+  wait for 15*clockcycle;
+  int_reset <= '1';
   wait for clockcycle;
-  wait for clockcycle;
-  wait for clockcycle;
-  wait until rising_edge(int_clock);
-  wait for clockcycle;
-  reset <= '1';
-  wait for clockcycle;
-  reset <= '0';
-  wait for 10*clockcyle;
+  int_reset <= '0';
+  wait for 20*clockcycle;
   --Raise a deliberate failure to stop execution
   assert false report "TESTBENCH FINISHED, raising a Failure to stop" severity failure;
   end process;
