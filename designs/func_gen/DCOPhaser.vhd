@@ -15,19 +15,25 @@ end DCOPhaser;
 
 architecture behaviour of DCOPhaser is 
 constant max_value: integer := Frequency;
-signal sig_out: integer;
+signal stored_value, new_stored_value : integer :=0;
 begin
     P_SEQUENTIAL : process(clock)
     begin
         if(clock'EVENT and clock = '1') then 
-        sig_out <= sig_out+1;
-            if(sig_out = max_value) then
-                sig_out <= 0;
-            end if;
-            if reset = '1' then
-                sig_out <= 0;
-            end if;
+            stored_value <= new_stored_value;
         end if;
     end process P_SEQUENTIAL;
-DCO_RAMP <= sig_out;    
+
+    P_COMBINATORIAL : process(stored_value,reset)
+    begin
+        if(stored_value = max_value) then
+            new_stored_value <= 0;
+        else
+            new_stored_value <=stored_value +1;
+        end if;
+        if reset = '1' then
+            new_stored_value <= 0;
+        end if;
+    end process P_COMBINATORIAL;
+DCO_RAMP <= stored_value;    
 end behaviour;
