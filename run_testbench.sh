@@ -61,7 +61,7 @@ function run()
 	ghdl -a $(find ./designs/ -name "*.vhd") $(find ./tests/ -name "*.vhd")
 	ghdl -e ${test_bench}
 	ghdl -r ${test_bench} --wave=./wave_out/${test_bench}.ghw
-	gtkwave ./wave_out/${test_bench}.ghw
+	gtkwave --saveonexit ./wave_out/${test_bench}.ghw ./wave_out/${test_bench}.sav
 }
 
 function error()
