@@ -1,25 +1,3 @@
-library ieee;
-use ieee.std_logic_1164.all;
-
-entity wave_lut is
-    generic (
-        signal_width: integer := 8
-    );
-    port (
-		index : in std_logic_vector(15 downto 0);
-		output : out std_logic_vector(signal_width - 1 downto 0)
-    );
-end;
-
-architecture behavior of wave_lut is
-
-begin
-
-process (index)
-begin
-
-case index(7 downto 0) is
-
 when "00000000" => output <= "00000000";
 when "00000001" => output <= "00000011";
 when "00000010" => output <= "00000110";
@@ -275,10 +253,3 @@ when "11111011" => output <= "11110100";
 when "11111100" => output <= "11110111";
 when "11111101" => output <= "11111010";
 when "11111110" => output <= "11111101";
-
-when others => output <= (others => '0');
-end case;
-
-end process;
-
-end;
