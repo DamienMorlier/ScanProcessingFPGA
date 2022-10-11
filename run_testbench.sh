@@ -51,14 +51,14 @@ Usage_Heredoc
 function setup()
 {
 	# Install packages
-	mkdir ./wave_out
+	mkdir ./wave_out >> /dev/null
 }
 
 function run()
 {
 	setup
 	test_bench=$1
-	ghdl -a ./designs/* ./tests/*
+	ghdl -a $(find ./designs/ -name "*.vhd") $(find ./designs/ -name "*.vhd")
 	ghdl -e ${test_bench}
 	ghdl -r ${test_bench} --wave=./wave_out/${test_bench}.ghw
 	gtkwave ./wave_out/${test_bench}.ghw
