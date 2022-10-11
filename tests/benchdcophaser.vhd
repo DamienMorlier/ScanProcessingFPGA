@@ -50,9 +50,11 @@ architecture test of DCO_test_bench is
   wait for clockcycle;
   wait until rising_edge(int_clock);
   wait for clockcycle;
-
-  wait for 10*clockcycle;
+  reset <= '1';
+  wait for clockcycle;
+  reset <= '0';
+  wait for 10*clockcyle;
   --Raise a deliberate failure to stop execution
-
+  assert false report "TESTBENCH FINISHED, raising a Failure to stop" severity failure;
   end process;
   end test;
