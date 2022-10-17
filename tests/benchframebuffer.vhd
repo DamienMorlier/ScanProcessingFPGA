@@ -13,6 +13,9 @@ architecture test of FB_test_bench is
     constant half_clockcycle : time := clockcycle/2;
 
     component FRAME_BUFFER 
+    generic(
+        H_RES : integer
+    );
     port(
         clk                     : in std_logic;
         en                      : in std_logic;
@@ -31,6 +34,7 @@ architecture test of FB_test_bench is
     end component;
 
     --Declaration of the internal  signals used in the testbench
+    constant h_res                  : integer := 719;
     signal int_clk       	        : std_logic := '0';
     signal int_en       	        : std_logic := '0';
 	signal int_reset     		    : std_logic := '0';
@@ -55,6 +59,9 @@ architecture test of FB_test_bench is
 
     --Instantiation of the Design Under Test
         DUT : FRAME_BUFFER
+            generic map(
+                H_RES => h_res
+            )
             port map (
                 clk                 => int_clk,
                 en                  => int_en,
@@ -82,7 +89,8 @@ architecture test of FB_test_bench is
 
   stimuli_generator: process
   begin
-  for i in 0 to 300000 loop
+  wait for clockcycle;
+  for i in 0 to 30 loop
     int_VIDEO_PIXEL_IN <= std_logic_vector(to_unsigned(i, 24));
     wait for clockcycle;
   end loop;
