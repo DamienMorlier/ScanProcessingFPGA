@@ -61,7 +61,7 @@ architecture behave of FRAME_BUFFER is
 begin
 	-- Register
 	reg_line_prefetch : entity work.RegFile(behave)
-	generic map (M => 20, N => 8)
+	generic map (M => 20, N => 24)
 	port map (
 		WD => std_logic_vector(VIDEO_PIXEL_IN),
 		WAddr => std_logic_vector(reg_write_addr),
