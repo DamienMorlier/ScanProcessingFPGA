@@ -2,6 +2,7 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use work.all;
+use std.env.stop;
 
 entity FB_test_bench is
 end entity FB_test_bench;
@@ -36,8 +37,8 @@ architecture test of FB_test_bench is
     --Declaration of the internal  signals used in the testbench
     constant h_res                  : integer := 719;
     signal int_clk       	        : std_logic := '0';
-    signal int_en       	        : std_logic := '0';
-	signal int_reset     		    : std_logic := '0';
+    signal int_en       	        : std_logic := '1';
+	signal int_reset     		    : std_logic := '1'; -- Reset before running!
     signal int_clk_video_pixel_in   : std_logic;
     signal int_VIDEO_PIXEL_IN       : std_logic_vector(24-1 downto 0);
     signal int_H_IN                 : unsigned(10-1 downto 0);
@@ -89,20 +90,30 @@ architecture test of FB_test_bench is
 
   stimuli_generator: process
   begin
+  -- Initialize before running, set up the enabler
   wait for clockcycle;
-  for i in 0 to 30 loop
-    int_VIDEO_PIXEL_IN <= std_logic_vector(to_unsigned(i, 24));
-    wait for clockcycle;
+  -- Start running
+  int_reset <= '0';
+  
+  for i in 0 to 16 loop
+	for j in 0 to 32 loop
+		int_VIDEO_PIXEL_IN <= std_logic_vector(to_unsigned(i+j, 24));
+		int_H_IN <= to_unsigned(i, 10);
+		int_V_IN <= to_unsigned(j, 10);
+		int_clk_video_pixel_in <= '1';
+		wait for clockcycle/2;
+		int_clk_video_pixel_in <= '0';	-- The pixel renew signal only high-active at the beginning of the data.
+		wait for clockcycle/2;
+	end loop;
   end loop;
 
-  int_H_IN <= to_unsigned(0, 10);
-  int_V_IN <= to_unsigned(0, 10);
+  
   wait for clockcycle;
-  assert (int_Rout /= int_Bout and int_Bout /= int_Gout) report "Wrong output" severity failure;
+  --assert (int_Rout /= int_Bout and int_Bout /= int_Gout) report "Wrong output" severity failure;
 
   wait for 10*clockcycle;
   --Raise a deliberate failure to stop execution
-  assert false report "TESTBENCH FINISHED, raising a Failure to stop" severity failure;
-
+  --assert false report "TESTBENCH FINISHED, raising a Failure to stop" severity failure;
+  stop;
   end process;
   end test;
