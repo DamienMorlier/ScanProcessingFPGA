@@ -60,6 +60,8 @@ architecture behave of FRAME_BUFFER is
 
 begin
 	-- Register
+	-- Refresh the write-in address ASYNCHRONOUSLY
+	reg_write_addr <= H_IN + V_IN * V_RES;
 	reg_line_prefetch : entity work.RegFile(behave)
 	generic map (M => 20, N => 24)
 	port map (
