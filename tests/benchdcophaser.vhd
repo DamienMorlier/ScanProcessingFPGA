@@ -12,26 +12,36 @@ architecture test of DCO_test_bench is
     constant clockcycle : time := 2 ns;
     constant half_clockcycle : time := clockcycle/2;
 
-    component DCOPhaser 
+    component DCOPhaser
+    generic(
+        DATA_WIDTH : integer;
+        CLOCK_FREQ : integer
+    );
     port(
         clock       : in std_logic;
         reset       : in std_logic;
         frequency   : in integer :=10;
-        DCO_RAMP    : out integer
+        DCO_RAMP    : out std_logic_vector(DATA_WIDTH-1 downto 0)
     );
     end component;
 
     --Declaration of the internal  signals used in the testbench
+    constant int_DATA_WIDTH : integer := 5;
+    constant int_CLOCK_FREQ : integer := 50000000;
     signal int_clock       	    :  std_logic := '0';
 	signal int_reset     		:  std_logic := '0';
 	signal real_frequency 	    :  integer := 10;
-	signal int_ramp_out      	:  integer;
+	signal int_ramp_out      	:  std_logic_vector(int_DATA_WIDTH-1 downto 0);
 
   
     begin
 
     --Instantiation of the Design Under Test
         DUT : DCOPhaser
+            generic map(
+                DATA_WIDTH => int_DATA_WIDTH,
+                CLOCK_FREQ => int_CLOCK_FREQ
+            )
             port map (
                 clock           => int_clock,
                 reset           => int_reset,
