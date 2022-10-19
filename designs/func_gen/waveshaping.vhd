@@ -15,14 +15,31 @@ end;
 
 architecture behavior of waveshaping is
 
+COMPONENT wave_lut
+	GENERIC (
+		signal_width : INTEGER := 8
+	);
+	PORT (
+		index : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+		output : OUT STD_LOGIC_VECTOR(signal_width - 1 DOWNTO 0)
+	);
+END COMPONENT;
 
+constant SINE_WAVE : std_logic_vector(3 downto 0) := "0000";
+constant SQUARE_WAVE : std_logic_vector(3 downto 0) := "0001";
+constant TRIANGLE_WAVE : std_logic_vector(3 downto 0) := "0010";
 
-constant SQUARE_WAVE : std_logic_vector(3 downto 0) := "0000";
-constant SINE_WAVE : std_logic_vector(3 downto 0) := "0001";
-constant COSINE_WAVE : std_logic_vector(3 downto 0) := "0010";
-constant TRIANGLE_WAVE : std_logic_vector(3 downto 0) := "0011";
+signal output_vector : std_logic_vector(DATA_WIDTH - 1 downto 0);
+signal lut_index : std_logic_vector(15 downto 0);
 
 begin
+
+waves : wave_lut
+GENERIC MAP(signal_width => DATA_WIDTH)
+PORT MAP(
+	index => lut_index,
+	output => output_vector
+);
 
 process(clk)
 begin
@@ -30,13 +47,17 @@ begin
 if rising_edge(clk) then 
 	case wave_select is
 		when SQUARE_WAVE =>
-			output <= (others => '0');
+			if input(7) = '1' then
+				output <= "10000000";
+			else
+				output <= "01111111";
+			end if;
 		when SINE_WAVE => 
-			output <= (others => '0');
-		when COSINE_WAVE =>
-			output <= (others => '0');
+			lut_index <= "00000000" & input;
+			output <= output_vector;
 		when TRIANGLE_WAVE =>
-			output <= (others => '0');
+			lut_index <= "00000001" & input;
+			output <= output_vector;
 		when others =>
 			output <= (others => '0');
 	end case;
