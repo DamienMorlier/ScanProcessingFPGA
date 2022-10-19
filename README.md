@@ -29,3 +29,9 @@ ghdl -r top-entity --wave=PathToResults\Name_wave.ghw
 ```
 
 Then you can use gtkwave to visualize your tests
+
+### Automatically run test bench
+
+```
+./run_testbench.sh run <test-bench-entity>
+```
