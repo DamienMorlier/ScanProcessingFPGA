@@ -9,29 +9,42 @@ end entity DCO_test_bench;
 architecture test of DCO_test_bench is
 
 
-    constant clockcycle : time := 2 ns;
+    constant clockcycle : time := 100 ns;
     constant half_clockcycle : time := clockcycle/2;
 
-    component DCOPhaser 
+    component DCOPhaser
+    generic(
+        DATA_WIDTH : integer;
+        DATA_SIZE  : integer;
+        CLOCK_FREQ : integer
+    );
     port(
         clock       : in std_logic;
         reset       : in std_logic;
-        frequency   : in integer :=10;
-        DCO_RAMP    : out integer
+        frequency   : in integer ;
+        DCO_RAMP    : out std_logic_vector(DATA_WIDTH-1 downto 0)
     );
     end component;
 
     --Declaration of the internal  signals used in the testbench
+    constant int_DATA_WIDTH : integer := 5;
+    constant int_DATA_SIZE  : integer := 32;
+    constant int_CLOCK_FREQ : integer := 500000;
     signal int_clock       	    :  std_logic := '0';
 	signal int_reset     		:  std_logic := '0';
-	signal real_frequency 	    :  integer := 10;
-	signal int_ramp_out      	:  integer;
+	signal real_frequency 	    :  integer := 1000;
+	signal int_ramp_out      	:  std_logic_vector(int_DATA_WIDTH-1 downto 0);
 
   
     begin
 
     --Instantiation of the Design Under Test
         DUT : DCOPhaser
+            generic map(
+                DATA_WIDTH => int_DATA_WIDTH,
+                CLOCK_FREQ => int_CLOCK_FREQ,
+                DATA_SIZE => int_DATA_SIZE
+            )
             port map (
                 clock           => int_clock,
                 reset           => int_reset,
@@ -48,7 +61,10 @@ architecture test of DCO_test_bench is
   int_reset <= '1';
   wait for clockcycle;
   int_reset <= '0';
-  wait for 20*clockcycle;
+  wait until int_ramp_out = "00000";
+  wait until int_ramp_out = "11111";
+  wait until int_ramp_out = "00000";
+  wait until int_ramp_out = "11111";
   --Raise a deliberate failure to stop execution
   assert false report "TESTBENCH FINISHED, raising a Failure to stop" severity failure;
   end process;

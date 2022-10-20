@@ -4,36 +4,43 @@ use IEEE.numeric_std.all;
 use work.all;
 
 entity DCOPhaser is 
+    generic( DATA_WIDTH : integer :=5;
+             DATA_SIZE  : integer :=32;
+             CLOCK_FREQ : integer :=1000000 -- 1 Mhz
+            );
     port(
-        reset : in std_logic;
-        clock : in std_logic;
+        reset       : in std_logic;
+        clock       : in std_logic;
         Frequency   : in integer;
-
-        DCO_RAMP : out integer
+        DCO_RAMP    : out std_logic_vector(DATA_WIDTH-1 downto 0)
     );
 end DCOPhaser;
 
 architecture behaviour of DCOPhaser is 
-constant max_value: integer := Frequency;
-signal stored_value, new_stored_value : integer :=0;
+constant bit_jump  : integer := integer(CLOCK_FREQ/Frequency/DATA_SIZE);
+signal stored_value, new_stored_value, count,new_count : integer :=0;
 begin
     P_SEQUENTIAL : process(clock)
     begin
-        if(clock'EVENT and clock = '1') then 
+        if(rising_edge(clock)) then 
             stored_value <= new_stored_value;
+            count <= new_count;
         end if;
     end process P_SEQUENTIAL;
 
-    P_COMBINATORIAL : process(stored_value,reset)
+    P_COMBINATORIAL : process(stored_value,reset,count)
     begin
-        if(stored_value = max_value) then
-            new_stored_value <= 0;
+        if(count = bit_jump) then
+            new_stored_value <= stored_value +1;
+            new_count <= 0;
         else
-            new_stored_value <=stored_value +1;
+            new_stored_value <=stored_value;
+            new_count <= count +1;
         end if;
         if reset = '1' then
             new_stored_value <= 0;
+            new_count <= 0;
         end if;
     end process P_COMBINATORIAL;
-DCO_RAMP <= stored_value;    
+DCO_RAMP <= std_logic_vector(to_unsigned(stored_value,DATA_WIDTH));    
 end behaviour;
