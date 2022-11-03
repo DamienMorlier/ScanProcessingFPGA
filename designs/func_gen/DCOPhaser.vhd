@@ -4,8 +4,7 @@ use IEEE.numeric_std.all;
 use work.all;
 
 entity DCOPhaser is
-    generic(DATA_WIDTH : integer;
-            CLOCK_FREQ : integer
+    generic(DATA_WIDTH : integer
             );
     port(
         --Frequency : in integer;
