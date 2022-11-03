@@ -47,23 +47,23 @@ end FRAME_BUFFER;
 
 architecture behave of FRAME_BUFFER is
 	-- Constants
-	constant V_RES: integer := 625 - 1; -- 5^4
-	constant H_RATE: integer := 15625; -- 5^5
-	constant V_RATE: integer := 25; -- 5^2
-	-- The highest frequency in this module is 5.5 MHz.
+	constant V_RES: integer := 576 - 1; 
+	constant V_RATE: integer := 25; 
+	-- The highest frequency in this module is 10.368 MHz under PAL standard
 	
 	-- Buses and lines
 	signal reg_write_data: unsigned(24-1 downto 0);
 	signal reg_write_addr, reg_read_addr_A, reg_read_addr_B: unsigned(20-1 downto 0);
 	signal reg_read_internal, reg_read_output: std_logic_vector(24-1 downto 0);
 	signal video_in_rgb_to_intensity: unsigned(8-1 downto 0);
+	signal if_new_pixel_available: std_logic;
 
 begin
 	-- Register
 	-- Refresh the write-in address ASYNCHRONOUSLY
 	reg_write_addr <= H_IN + V_IN * V_RES;
 	reg_line_prefetch : entity work.RegFile(behave)
-	generic map (M => 20, N => 24)
+	generic map (M => 20, N => 24, C => H_RES * V_RES)
 	port map (
 		WD => std_logic_vector(VIDEO_PIXEL_IN),
 		WAddr => std_logic_vector(reg_write_addr),
