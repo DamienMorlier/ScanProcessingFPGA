@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all;
 
 entity waveshaping is
     generic (
-        DATA_WIDTH: integer := 8
+        DATA_WIDTH: integer := 32
     );
     port (
 		wave_select: in std_logic_vector(3 downto 0);
@@ -42,21 +42,24 @@ PORT MAP(
 );
 
 process(clk)
+variable square: std_logic_vector(30 downto 0);
 begin
 
 if rising_edge(clk) then 
 	case wave_select is
 		when SQUARE_WAVE =>
 			if input(7) = '1' then
-				output <= "10000000";
+				square := (others => '0');
+				output <= '1' & square;
 			else
-				output <= "01111111";
+				square := (others => '1');
+				output <= '0' & square;
 			end if;
 		when SINE_WAVE => 
-			lut_index <= "00000000" & input;
+			lut_index <= "00000" & input;
 			output <= output_vector;
 		when TRIANGLE_WAVE =>
-			lut_index <= "00000001" & input;
+			lut_index <= "00001" & input;
 			output <= output_vector;
 		when others =>
 			output <= (others => '0');
