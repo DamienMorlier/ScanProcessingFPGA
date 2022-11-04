@@ -28,7 +28,7 @@ architecture test of DCO_test_bench is
 
     --Declaration of the internal  signals used in the testbench
     constant int_DATA_WIDTH : integer := 32;
-    constant int_CLOCK_FREQ : integer := 50000000;
+    --constant int_CLOCK_FREQ : integer := 50000000;
     signal int_clock       	    :  std_logic := '0';
 	signal int_reset     		:  std_logic := '0';
 	--signal real_frequency 	    :  integer := 150000;
