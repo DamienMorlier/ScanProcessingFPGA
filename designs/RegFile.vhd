@@ -19,7 +19,7 @@ end RegFile;
 architecture behave of RegFile is
   --Reg Array
   -- type RegArray is array(0 to 2**M-1) of std_logic_vector(N-1 downto 0);
-  type RegArray is array(0 to C) of std_logic_vector(N-1 downto 0);
+  type RegArray is array(0 to C-1) of std_logic_vector(N-1 downto 0);
   signal RegF :RegArray :=(others=>(others=>'0'));
   
   begin
