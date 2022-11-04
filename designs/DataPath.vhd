@@ -58,6 +58,7 @@ architecture behave of DataPath is
 	signal buffer_status: std_logic_vector(4-1 downto 0);
 	signal buffer_Xout, buffer_Yout: unsigned (10-1 downto 0);
 	signal buffer_Rout, buffer_Gout, buffer_Bout, buffer_Iout: unsigned (8-1 downto 0);
+	signal buffer_RGB_out: std_logic_vector(24-1 downto 0);
 	
 	-- Matrix processor input/output
 	signal mat_Zin, mat_Xout, mat_Yout, mat_Zout: unsigned (10-1 downto 0);
@@ -120,7 +121,7 @@ begin
 			clk, en, reset, 
 			clk_video_pixel, 
 			HDMI_VIDEO_PIXEL, 
-			ctr_Scanner_H_RAMP(16-1 downto 6), ctr_Scanner_V_RAMP(16-1 downto 6), 
+			unsigned(ctr_Scanner_H_RAMP(16-1 downto 6)), unsigned(ctr_Scanner_V_RAMP(16-1 downto 6)), 
 			ctr_FrameBuffer_Zoom,
 			ctr_FrameBuffer_H_Position, ctr_FrameBuffer_V_Position, 
 			ctr_FrameBuffer_H_Blanking, ctr_FrameBuffer_V_Blanking, 
@@ -136,10 +137,11 @@ begin
 	Iout <= buffer_Iout; 
 	
 	-- To HDMI output
+	buffer_RGB_out <= std_logic_vector(buffer_Rout) & std_logic_vector(buffer_Gout) & std_logic_vector(buffer_Bout);
 	HDMI_OUT: entity work.HDMI_OUTPUT(Behavioral)
 		port map(
 			clk, reset, en, 
-			buffer_Rout & buffer_Gout & buffer_Bout,
+			buffer_RGB_out,
 			TMDS_R, TMDS_G, TMDS_B, TMDS_CLK
 		);
 	        

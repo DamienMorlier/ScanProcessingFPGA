@@ -55,12 +55,14 @@ architecture behave of FRAME_BUFFER is
 	signal reg_write_data: unsigned(24-1 downto 0);
 	signal reg_write_addr, reg_read_addr_A, reg_read_addr_B: unsigned(20-1 downto 0);
 	signal reg_read_internal, reg_read_output: std_logic_vector(24-1 downto 0);
+	signal reg_write_en: std_logic;
 	signal if_new_pixel_available, if_new_pixel_read: std_logic;
 
 begin
 	-- Register
 	-- Refresh the write-in address ASYNCHRONOUSLY
 	reg_write_addr <= H_IN + V_IN * V_RES;
+	reg_write_en <= en and if_new_pixel_available;
 	reg_line_prefetch : entity work.RegFile(behave)
 	generic map (M => 20, N => 24, C => H_RES * V_RES)
 	port map (
@@ -68,7 +70,7 @@ begin
 		WAddr => std_logic_vector(reg_write_addr),
 		RA => std_logic_vector(reg_read_addr_A),
 		RB => std_logic_vector(reg_read_addr_B),
-		Write => (en and if_new_pixel_available),
+		Write => reg_write_en,
 		ReadA => '0', -- Port A not using
 		ReadB => en,
 		reset => reset, 

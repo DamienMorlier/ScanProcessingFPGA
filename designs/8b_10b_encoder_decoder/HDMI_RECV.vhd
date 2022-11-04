@@ -51,7 +51,7 @@ architecture behave of HDMI_RECV is
 	signal status: std_logic_vector(2-1 downto 0);
 begin
 	-- Decoder Instantition
-	DECODER: dec_8b10b(behavioral)
+	DECODER: dec_8b10b
 		port map(
 			reset => reset,
 			clk => clk,
@@ -130,24 +130,38 @@ begin
 				-- Pipelining: shared decoder to cut down the scale
 				-- Refresh CTR_SIG when control signal is detected
 				CTRL_SIG <= ko;
-				CTRL_WORD <= dec_data_out when ko = '1';
-				case counter is
+				if ko = '1' then 
+				    CTRL_WORD <= dec_data_out;
+				end if;
+				case to_integer(counter) is
 					when 1 =>
 						-- Load Red signal
 						dec_data_in <= HDMI_INPUT_BUFFER(30-1 downto 20);
 					when 2 =>
 						-- Export Red signal
-						RGB_OUTPUT(24-1 downto 16) <= dec_data_out when ko = '0' else (others => '0');
+						if ko = '0' then
+							RGB_OUTPUT(24-1 downto 16) <= dec_data_out;
+						else
+							RGB_OUTPUT(24-1 downto 16) <= (others => '0');
+						end if;
 						-- Load Green signal
 						dec_data_in <= HDMI_INPUT_BUFFER(20-1 downto 10);
 					when 3 =>
 						-- Export Green signal
-						RGB_OUTPUT(16-1 downto 8) <= dec_data_out when ko = '0' else (others => '0');
+						if ko = '0' then
+							RGB_OUTPUT(16-1 downto 8) <= dec_data_out;
+						else
+							RGB_OUTPUT(16-1 downto 8) <= (others => '0');
+						end if;
 						-- Load Blue signal
 						dec_data_in <= HDMI_INPUT_BUFFER(10-1 downto 0);
 					when 4 =>
 						-- Export Green signal
-						RGB_OUTPUT(8-1 downto 0) <= dec_data_out when ko = '0' else (others => '0');
+						if ko = '0' then
+							RGB_OUTPUT(8-1 downto 0) <= dec_data_out;
+						else
+							RGB_OUTPUT(8-1 downto 0) <= (others => '0');
+						end if;
 						-- Set "new pixel ready" flag and remove the "buffer-ready" flag
 						clk_video_pixel <= '1';
 						HDMI_INPUT_BUFFER_RDY <= '0';
