@@ -23,7 +23,7 @@ entity FRAME_BUFFER is
 		-- Pixel selector
 		H_IN, V_IN: in unsigned(10-1 downto 0); 
 		
-		-- Zoom parameter, -64 for 0% and 64 for 200% zoom ratio
+		-- Zoom parameter, -100 for 0% and 100 for 200% zoom ratio
 		Zoom: in signed(8-1 downto 0);
 		
 		-- Pixel selector
@@ -55,8 +55,7 @@ architecture behave of FRAME_BUFFER is
 	signal reg_write_data: unsigned(24-1 downto 0);
 	signal reg_write_addr, reg_read_addr_A, reg_read_addr_B: unsigned(20-1 downto 0);
 	signal reg_read_internal, reg_read_output: std_logic_vector(24-1 downto 0);
-	signal video_in_rgb_to_intensity: unsigned(8-1 downto 0);
-	signal if_new_pixel_available: std_logic;
+	signal if_new_pixel_available, if_new_pixel_read: std_logic;
 
 begin
 	-- Register
@@ -69,11 +68,11 @@ begin
 		WAddr => std_logic_vector(reg_write_addr),
 		RA => std_logic_vector(reg_read_addr_A),
 		RB => std_logic_vector(reg_read_addr_B),
-		Write => en,
-		ReadA => en,
+		Write => (en and if_new_pixel_available),
+		ReadA => '0', -- Port A not using
 		ReadB => en,
 		reset => reset, 
-		clk => clk_video_pixel_in, 
+		clk => clk, 
 		QA => reg_read_internal,
 		QB => reg_read_output
 	);
@@ -93,46 +92,60 @@ begin
 			Rout <= (others => '0');
 			Gout <= (others => '0');
 			Bout <= (others => '0');
+			if_new_pixel_read <= '0';
+			if_new_pixel_available <= '0';
 		else
-			if(rising_edge(clk) and en = '1') then
-				-- Main Process Here --
-				-- Buffering Datapath
-				-- Currently read port A is vacant
-				reg_read_addr_A <= (others => '0');
-				-- Set up read port B for the next pixel
-				reg_read_addr_B <= H_IN + V_IN * V_RES;
-				
-				-- Fetch a new pixel
-				Rout_temp := unsigned(reg_read_output(24-1 downto 16));
-				Gout_temp := unsigned(reg_read_output(16-1 downto 8));
-				Bout_temp := unsigned(reg_read_output(8-1 downto 0));
-				Iout_temp := (Rout_temp + Gout_temp + Bout_temp) / 3;
-				
-				-- Transformation
-				Xout_temp := ( signed(H_IN) - H_RES / 2 ) * Zoom / 100 + signed(H_IN) + signed(H_Position);
-				Yout_temp := ( signed(V_IN) - V_RES / 2 ) * Zoom / 100 + signed(V_IN) + signed(V_Position);
-				Xclamping := H_RES * signed(H_Blanking) / 100;
-				Yclamping := V_RES * signed(V_Blanking) / 100;
-				
-				-- Clamping and Blanking
-				if (((Xout_temp < 0) or (Xout_temp > H_RES - 1))
-					or ((Yout_temp < 0) or (Yout_temp > V_RES - 1))
-					or (Xout_temp > Xclamping)
-					or (Yout_temp > Yclamping)) then
-					Iout <= (others => '0');
-					Rout <= (others => '0');
-					Gout <= (others => '0');
-					Bout <= (others => '0');
-					Xout <= (others => '1');
-					Yout <= (others => '1');
+			if(rising_edge(clk) and (en = '1')) then
+				if (if_new_pixel_available = '1') then
+					-- Main Process Here --
+					-- Buffering Datapath
+					-- Currently read port A is vacant
+					reg_read_addr_A <= (others => '0');
+					-- Set up read port B for the next pixel
+					reg_read_addr_B <= H_IN + V_IN * V_RES;
+					
+					-- Fetch a new pixel
+					Rout_temp := unsigned(reg_read_output(24-1 downto 16));
+					Gout_temp := unsigned(reg_read_output(16-1 downto 8));
+					Bout_temp := unsigned(reg_read_output(8-1 downto 0));
+					Iout_temp := (Rout_temp + Gout_temp + Bout_temp) / 3;
+					
+					-- Transformation
+					Xout_temp := ( signed(H_IN) - H_RES / 2 ) * Zoom / 100 + signed(H_IN) + signed(H_Position);
+					Yout_temp := ( signed(V_IN) - V_RES / 2 ) * Zoom / 100 + signed(V_IN) + signed(V_Position);
+					Xclamping := H_RES * signed(H_Blanking) / 100;
+					Yclamping := V_RES * signed(V_Blanking) / 100;
+					
+					-- Clamping and Blanking
+					if (((Xout_temp < 0) or (Xout_temp > H_RES - 1))
+						or ((Yout_temp < 0) or (Yout_temp > V_RES - 1))
+						or (Xout_temp > Xclamping)
+						or (Yout_temp > Yclamping)) then
+						Iout <= (others => '0');
+						Rout <= (others => '0');
+						Gout <= (others => '0');
+						Bout <= (others => '0');
+						Xout <= (others => '1');
+						Yout <= (others => '1');
+					else
+						-- Output
+						Xout <= unsigned(Xout_temp(10-1 downto 0));
+						Yout <= unsigned(Yout_temp(10-1 downto 0));
+						Rout <= Rout_temp;
+						Gout <= Gout_temp;
+						Bout <= Bout_temp;
+						Iout <= Iout_temp;
+					end if;
+					
+					-- Set pixel-is-read flag
+					if_new_pixel_read <= '1';
 				else
-					-- Output
-					Xout <= unsigned(Xout_temp(10-1 downto 0));
-					Yout <= unsigned(Yout_temp(10-1 downto 0));
-					Rout <= Rout_temp;
-					Gout <= Gout_temp;
-					Bout <= Bout_temp;
-					Iout <= Iout_temp;
+					-- Check if new pixel available
+					if(clk_video_pixel_in = '1') then
+						if_new_pixel_available <= '1';
+					else 
+						if_new_pixel_read <= '0';
+					end if;
 				end if;
 			end if;
 		end if;
