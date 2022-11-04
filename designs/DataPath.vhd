@@ -13,11 +13,12 @@ entity DataPath is
 		
 		-- Output
 		VIDEO_PIXEL_OUT_RGB_RAW: out std_logic_vector(24-1 downto 0);	-- RAW 24bit pixel data
+		
 		-- HDMI output
-		TMDS_R : out STD_LOGIC;
-		TMDS_G : out STD_LOGIC;
-		TMDS_B : out STD_LOGIC;
-		TMDS_CLK : out STD_LOGIC;
+--		TMDS_R : out STD_LOGIC;
+--		TMDS_G : out STD_LOGIC;
+--		TMDS_B : out STD_LOGIC;
+--		TMDS_CLK : out STD_LOGIC;
 		
 		-- Analog controller output
 		Xout, Yout: out unsigned (10-1 downto 0);
@@ -138,11 +139,12 @@ begin
 	
 	-- To HDMI output
 	buffer_RGB_out <= std_logic_vector(buffer_Rout) & std_logic_vector(buffer_Gout) & std_logic_vector(buffer_Bout);
-	HDMI_OUT: entity work.HDMI_OUTPUT(Behavioral)
-		port map(
-			clk, reset, en, 
-			buffer_RGB_out,
-			TMDS_R, TMDS_G, TMDS_B, TMDS_CLK
-		);
+	VIDEO_PIXEL_OUT_RGB_RAW <= buffer_RGB_out;
+--	HDMI_OUT: entity work.HDMI_OUTPUT(Behavioral)
+--		port map(
+--			clk, reset, en, 
+--			buffer_RGB_out,
+--			TMDS_R, TMDS_G, TMDS_B, TMDS_CLK
+--		);
 	        
 end behave; 
