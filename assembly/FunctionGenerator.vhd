@@ -41,13 +41,12 @@ architecture behaviour of FunctionGenerator is
 
     component Offset
         generic(
-            M : integer;
-            N : integer
+            DATA_WIDTH : integer
         );
         port(
-            SIG_IN: in std_logic_vector(M-1 downto 0);
-            offset_value: in std_logic_vector(M-1 downto 0);
-            SIG_OUT : out std_logic_vector(N-1 downto 0)
+            SIG_IN: in std_logic_vector(DATA_WIDTH-1 downto 0);
+            offset_value: in std_logic_vector(DATA_WIDTH-1 downto 0);
+            SIG_OUT : out std_logic_vector(DATA_WIDTH-1 downto 0)
         );
     
         
@@ -84,8 +83,7 @@ begin
     );
     u2 : component Offset 
     generic map(
-        M => DATA_WIDTH,
-        N => DATA_WIDTH
+        DATA_WIDTH => DATA_WIDTH
     )
     port map(
         SIG_IN      => DCO_RAMP,
