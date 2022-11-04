@@ -12,11 +12,11 @@ ARCHITECTURE test OF waveshaping_test_bench IS
 
 	COMPONENT waveshaping is
 		generic (
-			DATA_WIDTH: integer := 8
+			DATA_WIDTH: integer := 32
 		);
 		port (
 			wave_select: in std_logic_vector(3 downto 0);
-			input: in std_logic_vector(DATA_WIDTH-1 downto 0);
+			input: in std_logic_vector(15 downto 0);
 			clk: in std_logic;
 			output: out std_logic_vector(DATA_WIDTH-1 downto 0)
 		);
@@ -25,8 +25,8 @@ ARCHITECTURE test OF waveshaping_test_bench IS
 	signal int_clock : std_logic := '0';
 
 	signal int_wave_select : std_logic_vector(3 downto 0);
-	signal int_input : std_logic_vector(7 downto 0);
-	signal int_output : std_logic_vector(7 downto 0);
+	signal int_input : std_logic_vector(15 downto 0);
+	signal int_output : std_logic_vector(31 downto 0);
 
 BEGIN
 
@@ -52,7 +52,7 @@ BEGIN
 		int_input <= (others => '0');
 		i := 0;
 		wait for clockcycle;
-		stimuli_loop: while i <= 255 loop
+		stimuli_loop: while i <= 65535 loop
 			int_input <= std_logic_vector(unsigned(int_input) + 1);
 			i := i + 1;
 			wait for clockcycle;
@@ -63,7 +63,7 @@ BEGIN
 		int_input <= (others => '0');
 		i := 0;
 		wait for clockcycle;
-		stimuli_loop2: while i <= 255 loop
+		stimuli_loop2: while i <= 65535 loop
 			int_input <= std_logic_vector(unsigned(int_input) + 1);
 			i := i + 1;
 			wait for clockcycle;
@@ -74,7 +74,7 @@ BEGIN
 		int_input <= (others => '0');
 		i := 0;
 		wait for clockcycle;
-		stimuli_loop3: while i <= 255 loop
+		stimuli_loop3: while i <= 65535 loop
 			int_input <= std_logic_vector(unsigned(int_input) + 1);
 			i := i + 1;
 			wait for clockcycle;
