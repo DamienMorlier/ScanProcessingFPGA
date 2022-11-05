@@ -120,17 +120,18 @@ begin
 					when 5 => 
 						LUT_INPUT <= RGB_in(24-1 downto 16);
 					when 6 => 
-						TMDS_R_REG(20-1 downto 0) <= LUT_OUTPUT;
+						TMDS_R_REG(20-1 downto 10) <= LUT_OUTPUT;
 						LUT_INPUT <= RGB_in(16-1 downto 8);
 					when 7 =>
-						TMDS_G_REG(20-1 downto 0) <= LUT_OUTPUT;
+						TMDS_G_REG(20-1 downto 10) <= LUT_OUTPUT;
 						LUT_INPUT <= RGB_in(8-1 downto 0);
 					when 8 =>
-						TMDS_B_REG(20-1 downto 0) <= LUT_OUTPUT;
+						TMDS_B_REG(20-1 downto 10) <= LUT_OUTPUT;
 					when 9 =>
 						TMDS_R_REG <= std_logic_vector(shift_right(unsigned(TMDS_R_REG),10));
 						TMDS_G_REG <= std_logic_vector(shift_right(unsigned(TMDS_G_REG),10));
 						TMDS_B_REG <= std_logic_vector(shift_right(unsigned(TMDS_B_REG),10));
+					when others => NULL;
 				end case;
 			end if;
 		end if;
