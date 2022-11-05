@@ -9,7 +9,8 @@ end entity FB_test_bench;
 
 architecture test of FB_test_bench is
 
-
+	constant pixel_clockcycle: time := 6 ns;
+	constant half_pixel_clockcycle: time := pixel_clockcycle/2;
     constant clockcycle : time := 2 ns;
     constant half_clockcycle : time := clockcycle/2;
 
@@ -23,6 +24,7 @@ architecture test of FB_test_bench is
         reset                   : in std_logic;
         clk_video_pixel_in      : in std_logic;
         VIDEO_PIXEL_IN          : in std_logic_vector(24-1 downto 0);
+		IF_RECV					: in std_logic;
         H_IN, V_IN              : in unsigned(10-1 downto 0);
         Zoom                    : in signed(8-1 downto 0);
         H_Position, V_Position  : in signed(10-1 downto 0);
@@ -41,6 +43,7 @@ architecture test of FB_test_bench is
 	signal int_reset     		    : std_logic := '1'; -- Reset before running!
     signal int_clk_video_pixel_in   : std_logic;
     signal int_VIDEO_PIXEL_IN       : std_logic_vector(24-1 downto 0);
+	signal int_IF_RECV				: std_logic := '1';
     signal int_H_IN                 : unsigned(10-1 downto 0);
     signal int_V_IN                 : unsigned(10-1 downto 0);
     signal int_Zoom                 : signed(8-1 downto 0);
@@ -69,6 +72,7 @@ architecture test of FB_test_bench is
                 reset               => int_reset,
                 clk_video_pixel_in  => int_clk_video_pixel_in,
                 VIDEO_PIXEL_IN      => int_VIDEO_PIXEL_IN,
+				IF_RECV				=> int_IF_RECV,
                 H_IN                => int_H_IN,
                 V_IN                => int_V_IN,
                 Zoom                => int_Zoom,
@@ -87,33 +91,52 @@ architecture test of FB_test_bench is
 
     --Generation of Clock cycles and Reset pulse
         int_clk   <= not(int_clk) after half_clockcycle;
-
+		
   stimuli_generator: process
   begin
-  -- Initialize before running, set up the enabler
+  -- Initialize before running
+  int_H_Position <= (others => '0');
+  int_V_Position <= (others => '0');
+  int_H_Blanking <= (others => '0');
+  int_V_Blanking <= (others => '0');
+  int_Zoom <= (others => '0');
   wait for clockcycle;
   -- Start running
   int_reset <= '0';
   
+  -- Read while writing
   for i in 0 to 16 loop
 	for j in 0 to 32 loop
-		int_VIDEO_PIXEL_IN <= std_logic_vector(to_unsigned(i+j, 24));
+		int_VIDEO_PIXEL_IN <= std_logic_vector(to_unsigned(i*256*256+i*256+j, 24));
 		int_H_IN <= to_unsigned(i, 10);
 		int_V_IN <= to_unsigned(j, 10);
 		int_clk_video_pixel_in <= '1';
-		wait for clockcycle/2;
+		wait for half_pixel_clockcycle;
 		int_clk_video_pixel_in <= '0';	-- The pixel renew signal only high-active at the beginning of the data.
-		wait for clockcycle/2;
+		wait for half_pixel_clockcycle;
 	end loop;
   end loop;
 
   
   wait for clockcycle;
   --assert (int_Rout /= int_Bout and int_Bout /= int_Gout) report "Wrong output" severity failure;
-
+  
+  int_IF_RECV <= '0';
   wait for 10*clockcycle;
   --Raise a deliberate failure to stop execution
   --assert false report "TESTBENCH FINISHED, raising a Failure to stop" severity failure;
+  
+  -- Just Read
+  for i in 0 to 16 loop
+	for j in 0 to 32 loop
+		int_H_IN <= to_unsigned(i, 10);
+		int_V_IN <= to_unsigned(j, 10);
+		int_clk_video_pixel_in <= '1';
+		wait for half_pixel_clockcycle;
+		int_clk_video_pixel_in <= '0';	-- The pixel renew signal only high-active at the beginning of the data.
+		wait for half_pixel_clockcycle;
+	end loop;
+  end loop;
   stop;
   end process;
   end test;
