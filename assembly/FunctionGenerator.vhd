@@ -14,13 +14,13 @@ entity FunctionGenerator is
     phase_incr          : in std_logic_vector(DATA_WIDTH-1 downto 0); --Wanted Frequency
     Scale               : in std_logic_vector(DATA_WIDTH-1 downto 0);
     SIG_OUT             : out std_logic_vector(DATA_WIDTH-1 downto 0);   
-    Offset_val          : in std_logic_vector(DATA_WIDTH-1 downto 0)
+    Offset_val          : in std_logic_vector(DATA_WIDTH-1 downto 0);
 
     --External            : in std_logic;
     --Harmonic            : in std_logic_vector(DATA_WIDTH-1 downto 0);
     --Phase               : in std_logic_vector(DATA_WIDTH-1 downto 0);
     --Sync                : in std_logic;
-    --Waveform            : in std_logic;
+    waveform            : in std_logic_vector(3 downto 0)
     --I_OUT               : out std_logic;
     --B_OUT               : out std_logic
     );
@@ -64,6 +64,17 @@ architecture behaviour of FunctionGenerator is
         );
     end component;
 
+    component waveshaping
+        generic(
+            DATA_WIDTH : integer
+        );
+        port(
+            wave_select : std_logic_vector(3 downto 0);
+            input: in std_logic_vector(DATA_WIDTH-1 downto 0);
+            clk: in std_logic;
+            output: out std_logic_vector(DATA_WIDTH-1 downto 0)
+        );
+    end component;
 
 
 signal DCO_RAMP     : std_logic_vector(DATA_WIDTH-1 downto 0);
@@ -101,5 +112,15 @@ begin
         SIG_OUT        => RAMP_SCALED
 
     );
-    SIG_OUT <= RAMP_SCALED;
+
+    u6 : component waveshaping
+    generic map(
+        DATA_WIDTH => DATA_WIDTH
+    )
+    port map(
+        input => RAMP_SCALED,
+        clk => clock,
+        wave_select => waveform,
+        output => SIG_OUT
+    );
 end behaviour;

@@ -21,13 +21,13 @@ architecture test of func_gen_test_bench is
     phase_incr          : in std_logic_vector(DATA_WIDTH-1 downto 0); --Wanted Frequency
     Scale               : in std_logic_vector(DATA_WIDTH-1 downto 0);
     Offset_val          : in std_logic_vector(DATA_WIDTH-1 downto 0);
-    SIG_OUT             : out std_logic_vector(DATA_WIDTH-1 downto 0)
+    SIG_OUT             : out std_logic_vector(DATA_WIDTH-1 downto 0);
 
     --External            : in std_logic;
     --Harmonic            : in std_logic_vector(DATA_WIDTH-1 downto 0);
     --Phase               : in std_logic_vector(DATA_WIDTH-1 downto 0);
     --Sync                : in std_logic;
-    --Waveform            : in std_logic;
+    waveform            : in std_logic_vector(3 downto 0)
     --I_OUT               : out std_logic;
     --B_OUT               : out std_logic
     );
@@ -42,7 +42,7 @@ signal int_phase_incr       : std_logic_vector(int_DATA_WIDTH-1 downto 0) := std
 signal int_Scale            : std_logic_vector(int_DATA_WIDTH-1 downto 0) := std_logic_vector(to_signed(integer(3),int_DATA_WIDTH));
 signal int_Offset_val       : std_logic_vector(int_DATA_WIDTH-1 downto 0) := std_logic_vector(to_signed(integer(0),int_DATA_WIDTH));
 signal int_SIG_OUT          : std_logic_vector(int_DATA_WIDTH-1 downto 0) := (others => '0');
-
+signal std_waveform         : std_logic_vector(3 downto 0);
 
 begin
     DUT : FunctionGenerator
@@ -54,12 +54,13 @@ begin
         reset             => std_reset,
         phase_incr        => int_phase_incr,
         Scale             => int_Scale,
-        Offset_val        => int_Offset_val,  
+        Offset_val        => int_Offset_val,
+        waveform          => std_waveform,  
         SIG_OUT           => int_SIG_OUT
     );
     --Generation of Clock cycles and Reset pulse
     std_clock   <= not(std_clock) after half_clockcycle;
-
+    std_waveform <= "0000";
     stimuli_generator: process
     begin
     wait for 1000000*clockcycle;
