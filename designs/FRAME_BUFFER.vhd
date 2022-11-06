@@ -134,8 +134,8 @@ begin
 				-- stop;
 				
 				-- Clamping and Blanking
-				if (((Xout_temp < 0) or (Xout_temp > H_RES - 1))
-					or ((Yout_temp < 0) or (Yout_temp > V_RES - 1))
+				if (((Xout_temp < 0) or (Xout_temp > V_RES - 1))
+					or ((Yout_temp < 0) or (Yout_temp > H_RES - 1))
 					or (Xout_temp > Xclamping)
 					or (Yout_temp > Yclamping)) then
 					Iout <= (others => '0');
