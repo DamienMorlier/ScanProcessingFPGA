@@ -7,7 +7,7 @@ entity waveshaping is
     );
     port (
 		wave_select: in std_logic_vector(3 downto 0);
-		input: in std_logic_vector(15 downto 0);
+		input: in std_logic_vector(DATA_WIDTH - 1 downto 0);
 		clk: in std_logic;
 		output: out std_logic_vector(DATA_WIDTH-1 downto 0)
     );
@@ -56,10 +56,10 @@ if rising_edge(clk) then
 				output <= '0' & square;
 			end if;
 		when SINE_WAVE => 
-			lut_index <= "00000" & input;
+			lut_index <= "00000" & input(31 downto 16);
 			output <= output_vector;
 		when TRIANGLE_WAVE =>
-			lut_index <= "00001" & input;
+			lut_index <= "00001" & input(31 downto 16);
 			output <= output_vector;
 		when others =>
 			output <= (others => '0');
