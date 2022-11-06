@@ -7,7 +7,7 @@ entity waveshaping is
     );
     port (
 		wave_select: in std_logic_vector(3 downto 0);
-		input: in std_logic_vector(DATA_WIDTH-1 downto 0);
+		input: in std_logic_vector(15 downto 0);
 		clk: in std_logic;
 		output: out std_logic_vector(DATA_WIDTH-1 downto 0)
     );
@@ -48,7 +48,7 @@ begin
 if rising_edge(clk) then 
 	case wave_select is
 		when SQUARE_WAVE =>
-			if input(7) = '1' then
+			if input(15) = '1' then
 				square := (others => '0');
 				output <= '1' & square;
 			else
