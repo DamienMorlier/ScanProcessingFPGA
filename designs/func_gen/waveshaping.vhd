@@ -1,16 +1,18 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use work.all;
 
 entity waveshaping is
-    generic (
-        DATA_WIDTH: integer := 32
-    );
-    port (
-		wave_select: in std_logic_vector(3 downto 0);
-		input: in std_logic_vector(DATA_WIDTH - 1 downto 0);
-		clk: in std_logic;
-		output: out std_logic_vector(DATA_WIDTH-1 downto 0)
-    );
+	generic(
+		DATA_WIDTH : integer
+	);
+	port(
+		clk                         : in std_logic;
+		ctr_Waveshaping_waveform    : in std_logic_vector(3 downto 0);
+		ctr_Waveshaping_input       : in std_logic_vector(DATA_WIDTH-1 downto 0);
+		ctr_Waveshaping_output      : out std_logic_vector(DATA_WIDTH-1 downto 0)
+	);
 end;
 
 architecture behavior of waveshaping is
@@ -46,23 +48,23 @@ variable square: std_logic_vector(30 downto 0);
 begin
 
 if rising_edge(clk) then 
-	case wave_select is
+	case ctr_Waveshaping_waveform is
 		when SQUARE_WAVE =>
-			if input(15) = '1' then
+			if ctr_Waveshaping_input(15) = '1' then
 				square := (others => '0');
-				output <= '1' & square;
+				ctr_Waveshaping_output <= '1' & square;
 			else
 				square := (others => '1');
-				output <= '0' & square;
+				ctr_Waveshaping_output <= '0' & square;
 			end if;
 		when SINE_WAVE => 
-			lut_index <= "00000" & input(31 downto 16);
-			output <= output_vector;
+			lut_index <= "00000" & ctr_Waveshaping_input(31 downto 16);
+			ctr_Waveshaping_output <= output_vector;
 		when TRIANGLE_WAVE =>
-			lut_index <= "00001" & input(31 downto 16);
-			output <= output_vector;
+			lut_index <= "00001" & ctr_Waveshaping_input(31 downto 16);
+			ctr_Waveshaping_output <= output_vector;
 		when others =>
-			output <= (others => '0');
+		ctr_Waveshaping_output <= (others => '0');
 	end case;
 end if;
 
