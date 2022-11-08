@@ -27,6 +27,9 @@ entity FRAME_BUFFER is
 		-- Pixel selector
 		H_IN, V_IN: in unsigned(10-1 downto 0); 
 		
+		-- Frame buffer input selector
+		H_SCAN_IN, V_SCAN_IN: in unsigned(10-1 downto 0); 
+		
 		-- Zoom parameter, -100 for 0% and 100 for 200% zoom ratio
 		Zoom: in signed(8-1 downto 0);
 		
@@ -65,7 +68,7 @@ architecture behave of FRAME_BUFFER is
 begin
 	-- Register
 	-- Refresh the write-in address
-	reg_write_addr <= V_IN + H_IN * V_RES;
+	reg_write_addr <= V_SCAN_IN + H_SCAN_IN * V_RES;
 	-- Currently read port A is vacant
 	reg_read_addr_A <= (others => '0');
 	-- Set up read port B for the next pixel
@@ -86,7 +89,7 @@ begin
 		ReadA => '0', -- Port A not using
 		ReadB => en,
 		reset => reset, 
-		clk => clk, 
+		clk => clk_video_pixel_in, 
 		QA => reg_read_internal,
 		QB => reg_read_output
 	);
@@ -142,8 +145,8 @@ begin
 					Rout <= (others => '0');
 					Gout <= (others => '0');
 					Bout <= (others => '0');
-					Xout <= (others => '1');
-					Yout <= (others => '1');
+					Xout <= (others => '0');
+					Yout <= (others => '0');
 				else
 					-- Output
 					Xout <= unsigned(Xout_temp(10-1 downto 0));
