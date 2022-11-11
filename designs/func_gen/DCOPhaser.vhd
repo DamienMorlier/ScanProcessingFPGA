@@ -3,44 +3,34 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use work.all;
 
-entity DCOPhaser is 
-    generic( DATA_WIDTH : integer :=5;
-             DATA_SIZE  : integer :=32;
-             CLOCK_FREQ : integer :=1000000 -- 1 Mhz
-            );
+entity DCOPhaser is
+    generic(
+        DATA_WIDTH : integer
+    );
     port(
-        reset       : in std_logic;
-        clock       : in std_logic;
-        Frequency   : in integer;
-        DCO_RAMP    : out std_logic_vector(DATA_WIDTH-1 downto 0)
+        reset                       : in std_logic;
+        clk                         : in std_logic;
+        ctr_DCO_Phaser_sync         : in std_logic;
+        ctr_DCOPhaser_frequency     : in std_logic_vector(DATA_WIDTH-1 downto 0);
+        ctr_DCOPhaser_output        : out std_logic_vector(DATA_WIDTH-1 downto 0)
     );
 end DCOPhaser;
-
-architecture behaviour of DCOPhaser is 
-constant bit_jump  : integer := integer(CLOCK_FREQ/Frequency/DATA_SIZE);
-signal stored_value, new_stored_value, count,new_count : integer :=0;
+architecture behaviour of DCOPhaser is
+    signal   count     : unsigned(DATA_WIDTH-1 downto 0 ) := (others => '0');
 begin
-    P_SEQUENTIAL : process(clock)
+    P_SEQUENTIAL : process(clk,reset,ctr_DCO_Phaser_sync)
     begin
-        if(rising_edge(clock)) then 
-            stored_value <= new_stored_value;
-            count <= new_count;
+        if (ctr_DCO_Phaser_sync = '1') then
+            count <=(others => '0');
         end if;
+        if (reset = '1') then
+            count <=(others => '0');
+        end if;
+        if(rising_edge(clk)) then
+            count <= count + unsigned(ctr_DCOPhaser_frequency);
+        end if; 
     end process P_SEQUENTIAL;
 
-    P_COMBINATORIAL : process(stored_value,reset,count)
-    begin
-        if(count = bit_jump) then
-            new_stored_value <= stored_value +1;
-            new_count <= 0;
-        else
-            new_stored_value <=stored_value;
-            new_count <= count +1;
-        end if;
-        if reset = '1' then
-            new_stored_value <= 0;
-            new_count <= 0;
-        end if;
-    end process P_COMBINATORIAL;
-DCO_RAMP <= std_logic_vector(to_unsigned(stored_value,DATA_WIDTH));    
-end behaviour;
+    ctr_DCOPhaser_output <= std_logic_vector(count);    
+
+end behaviour ; 

@@ -12,6 +12,7 @@ entity DataPath is
 		clk, reset, en: in std_logic;
 		
 		-- Output
+
 		VIDEO_PIXEL_OUT_RGB_RAW: out std_logic_vector(24-1 downto 0);	-- RAW 24bit pixel data
 		
 		-- HDMI output
@@ -28,6 +29,7 @@ entity DataPath is
 end DataPath;
 
 architecture behave of DataPath is
+
 	-- Wiring ----------------------------
 	-- HDMI input parser
 	signal HDMI_VIDEO_PIXEL: std_logic_vector(24-1 downto 0);
