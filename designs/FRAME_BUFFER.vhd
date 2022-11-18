@@ -5,7 +5,10 @@ use work.all;
 -- use std.env.stop; -- For testbench only
 
 entity FRAME_BUFFER is
-	generic(H_RES: integer := 720 - 1);
+	generic(
+	   H_RES: integer := 300 - 1;
+	   V_RES: integer := 200 - 1
+	  );
 	port(
 		-- REMINDER!!!
 		-- ALL NAMES OF PORTS MENTIONED BY DEREK 
@@ -33,7 +36,7 @@ entity FRAME_BUFFER is
 		-- Zoom parameter, -100 for 0% and 100 for 200% zoom ratio
 		Zoom: in signed(8-1 downto 0);
 		
-		-- Pixel selector
+		-- 2D shift parameters
 		H_Position, V_Position: in signed(10-1 downto 0); 
 		
 		-- Percentage of output frame blanked. 
@@ -54,14 +57,13 @@ end FRAME_BUFFER;
 
 architecture behave of FRAME_BUFFER is
 	-- Constants
-	constant V_RES: integer := 576 - 1; 
 	constant V_RATE: integer := 25; 
 	-- The highest frequency in this module is 10.368 MHz under PAL standard
 	
 	-- Buses and lines
 	signal reg_write_data: unsigned(24-1 downto 0);
 	signal reg_write_addr, reg_read_addr_A, reg_read_addr_B: unsigned(20-1 downto 0);
-	signal reg_read_internal, reg_read_output: std_logic_vector(24-1 downto 0);
+	signal reg_read_output: std_logic_vector(24-1 downto 0);
 	signal reg_write_en: std_logic;
 	signal if_new_pixel_available, if_new_pixel_read: std_logic;
 
@@ -79,19 +81,17 @@ begin
 	
 	-- Buffer instantiation
 	reg_line_prefetch : entity work.RegFile(behave)
-	generic map (M => 20, N => 24, C => H_RES * V_RES)
+	generic map (M => 20, N => 24, C => 2**16)
 	port map (
 		WD => std_logic_vector(VIDEO_PIXEL_IN),
 		WAddr => std_logic_vector(reg_write_addr),
-		RA => std_logic_vector(reg_read_addr_A),
-		RB => std_logic_vector(reg_read_addr_B),
+		RA => std_logic_vector(reg_read_addr_B),
 		Write => reg_write_en,
-		ReadA => '0', -- Port A not using
-		ReadB => en,
+		ReadA => en,
 		reset => reset, 
 		clk => clk_video_pixel_in, 
-		QA => reg_read_internal,
-		QB => reg_read_output
+		-- QA => reg_read_internal,
+		QA => reg_read_output
 	);
 	
 	-- ReadOut

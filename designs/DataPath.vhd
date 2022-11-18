@@ -36,6 +36,7 @@ architecture behave of DataPath is
 	
 	-- USB generator controller parser
 	signal ctr_FrameBuffer_Zoom: signed(8-1 downto 0);
+	signal ctr_FrameBuffer_X_Sel, ctr_FrameBuffer_Y_Sel: unsigned(10-1 downto 0);
 	signal ctr_FrameBuffer_H_Blanking, ctr_FrameBuffer_V_Blanking: unsigned(8-1 downto 0);
 	signal ctr_FrameBuffer_H_Position, ctr_FrameBuffer_V_Position: signed(10-1 downto 0);
 	signal ctr_Scanner_H_Frequency: unsigned(16-1 downto 0); -- Derek says he also wanted backward scanning, so should we consider a signed frequency value? 
@@ -124,6 +125,7 @@ begin
 			clk_video_pixel, 
 			HDMI_VIDEO_PIXEL, 
 			ctr_Scanner_IF_RECV,
+			ctr_FrameBuffer_X_Sel, ctr_FrameBuffer_Y_Sel,
 			unsigned(ctr_Scanner_H_RAMP(16-1 downto 6)), unsigned(ctr_Scanner_V_RAMP(16-1 downto 6)), 
 			ctr_FrameBuffer_Zoom,
 			ctr_FrameBuffer_H_Position, ctr_FrameBuffer_V_Position, 

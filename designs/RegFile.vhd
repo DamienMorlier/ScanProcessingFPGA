@@ -8,11 +8,11 @@ entity RegFile is
   port(
     --Input ports
     WD: In std_logic_vector(N-1 downto 0);
-    WAddr, RA, RB: In std_logic_vector(M-1 downto 0);
-    Write, ReadA, ReadB, reset, clk: In std_logic;
+    WAddr, RA: In std_logic_vector(M-1 downto 0);
+    Write, ReadA, reset, clk: In std_logic;
     
     --Output ports
-    QA, QB: Out std_logic_vector(N-1 downto 0)
+    QA: Out std_logic_vector(N-1 downto 0)
   );
 end RegFile;
 
@@ -25,7 +25,6 @@ architecture behave of RegFile is
   begin
 	assert C < 2**M + 1 report "Not enough address bit width to support that much cells!" severity failure;
 	QA<=RegF(to_integer(unsigned(RA))) when ReadA='1' else (others=>'0');
-	QB<=RegF(to_integer(unsigned(RB))) when ReadB='1' else (others=>'0');
     process(reset, clk)
     begin
       if(reset='1') then 
