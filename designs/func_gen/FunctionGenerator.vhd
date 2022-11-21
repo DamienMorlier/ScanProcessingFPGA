@@ -109,6 +109,8 @@ signal ctr_FuncGen_Scale2       : std_logic_vector(DATA_WIDTH-1 downto 0);
 signal ctr_FuncGen_WaveShaping : std_logic_vector(DATA_WIDTH-1 downto 0);
 signal ctr_FuncGen_RegisterOut1 : std_logic_vector(DATA_WIDTH-1 downto 0);
 signal ctr_FuncGen_RegisterOut2 : std_logic_vector(DATA_WIDTH-1 downto 0);
+signal ctr_FuncGen_RegisterOut3 : std_logic_vector(DATA_WIDTH-1 downto 0);
+
 begin
     RAMP : component DCOPhaser 
     generic map(
@@ -160,7 +162,15 @@ begin
         ctr_Scale_output   => ctr_FuncGen_Scale1
 
     );
-
+    REGISTER_2 : component Register_1
+        generic map(
+            DATA_WIDTH => DATA_WIDTH
+        )
+        port map(
+            clk => clk,
+            shift_in => ctr_FuncGen_Scale1,
+            shift_out => ctr_FuncGen_RegisterOut2
+        );
     WAVESHAPE : component waveshaping
     generic map(
         DATA_WIDTH => DATA_WIDTH
@@ -168,25 +178,25 @@ begin
     port map(
         clk                         => clk,
         ctr_Waveshaping_waveform    => ctr_Scanner_Waveform,
-        ctr_Waveshaping_input       => ctr_FuncGen_Scale1,
+        ctr_Waveshaping_input       => ctr_FuncGen_RegisterOut2,
         ctr_Waveshaping_output      => ctr_FuncGen_WaveShaping
     );
 
-    REGISTER_2 : component Register_1
+    REGISTER_3 : component Register_1
     generic map(
         DATA_WIDTH => DATA_WIDTH
     )
     port map(
         clk => clk,
         shift_in => ctr_FuncGen_WaveShaping,
-        shift_out => ctr_FuncGen_RegisterOut2
+        shift_out => ctr_FuncGen_RegisterOut3
     );
     SCALE_2 : component scaling
     generic map(
         DATA_WIDTH => DATA_WIDTH
     )
     port map(
-        ctr_Scale_input    => ctr_FuncGen_RegisterOut2,
+        ctr_Scale_input    => ctr_FuncGen_RegisterOut3,
         ctr_Scale_value    => ctr_Scanner_Scale2,
         ctr_Scale_output   => ctr_FuncGen_Scale2
 
