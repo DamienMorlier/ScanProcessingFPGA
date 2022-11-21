@@ -1,7 +1,7 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
-use work.all;
+--use work.all;
 
 
 entity FunctionGenerator is 
@@ -27,6 +27,15 @@ entity FunctionGenerator is
 end FunctionGenerator;
 
 architecture behaviour of FunctionGenerator is
+    component Register_1
+    generic(
+        DATA_WIDTH : integer
+    );
+    port(clk : in  std_logic;
+        shift_in           : in  std_logic_vector (DATA_WIDTH downto 0);
+        shift_out          : out std_logic_vector (DATA_WIDTH downto 0)
+        );
+    end component;
     component DCOPhaser
         generic(
             DATA_WIDTH : integer
@@ -98,9 +107,10 @@ signal ctr_FuncGen_Offset2      : std_logic_vector(DATA_WIDTH-1 downto 0);
 signal ctr_FuncGen_Scale1       : std_logic_vector(DATA_WIDTH-1 downto 0);
 signal ctr_FuncGen_Scale2       : std_logic_vector(DATA_WIDTH-1 downto 0);
 signal ctr_FuncGen_WaveShaping : std_logic_vector(DATA_WIDTH-1 downto 0);
-
+signal ctr_FuncGen_RegisterOut1 : std_logic_vector(DATA_WIDTH-1 downto 0);
+signal ctr_FuncGen_RegisterOut2 : std_logic_vector(DATA_WIDTH-1 downto 0);
 begin
-    UNIT1 : component DCOPhaser 
+    RAMP : component DCOPhaser 
     generic map(
         DATA_WIDTH => DATA_WIDTH
     )
@@ -112,7 +122,7 @@ begin
         ctr_DCOPhaser_output    =>      ctr_FuncGen_Saw        
 
     );
-    UNIT2 : component Switch
+    SWITCH_1 : component Switch
     generic map(
         DATA_WIDTH => DATA_WIDTH
     )
@@ -122,7 +132,7 @@ begin
         ctr_Switch_In                   => ctr_Scanner_Switch,                   
         ctr_Switch_Out                  => ctr_FuncGen_SwitchOut               
     );
-    UNIT3 : component Offset 
+    OFFSET_1 : component Offset 
     generic map(
         DATA_WIDTH => DATA_WIDTH
     )
@@ -131,19 +141,27 @@ begin
         ctr_Offset_val      => ctr_Scanner_PhaseOff1,
         ctr_Offset_output   => ctr_FuncGen_Offset1
     );
-
-    UNIT4 : component scaling
+    REGISTER_0 : component Register_1
+        generic map(
+            DATA_WIDTH => DATA_WIDTH
+        )
+        port map(
+            clk => clk,
+            shift_in => ctr_FuncGen_Offset1,
+            shift_out => ctr_FuncGen_RegisterOut1
+        );
+    SCALE_1 : component scaling
     generic map(
         DATA_WIDTH => DATA_WIDTH
     )
     port map(
-        ctr_Scale_input    => ctr_FuncGen_Offset1,
+        ctr_Scale_input    => ctr_FuncGen_RegisterOut1,
         ctr_Scale_value    => ctr_Scanner_Scale1,
         ctr_Scale_output   => ctr_FuncGen_Scale1
 
     );
 
-    UNIT6 : component waveshaping
+    WAVESHAPE : component waveshaping
     generic map(
         DATA_WIDTH => DATA_WIDTH
     )
@@ -154,18 +172,26 @@ begin
         ctr_Waveshaping_output      => ctr_FuncGen_WaveShaping
     );
 
-
-    UNIT7 : component scaling
+    REGISTER_2 : component Register_1
     generic map(
         DATA_WIDTH => DATA_WIDTH
     )
     port map(
-        ctr_Scale_input    => ctr_FuncGen_WaveShaping,
+        clk => clk,
+        shift_in => ctr_FuncGen_WaveShaping,
+        shift_out => ctr_FuncGen_RegisterOut2
+    );
+    SCALE_2 : component scaling
+    generic map(
+        DATA_WIDTH => DATA_WIDTH
+    )
+    port map(
+        ctr_Scale_input    => ctr_FuncGen_RegisterOut2,
         ctr_Scale_value    => ctr_Scanner_Scale2,
         ctr_Scale_output   => ctr_FuncGen_Scale2
 
     );
-    UNIT8 : component Offset 
+    OFFSET_2 : component Offset 
     generic map(
         DATA_WIDTH => DATA_WIDTH
     )
