@@ -32,8 +32,8 @@ architecture behaviour of FunctionGenerator is
         DATA_WIDTH : integer
     );
     port(clk : in  std_logic;
-        shift_in           : in  std_logic_vector (DATA_WIDTH downto 0);
-        shift_out          : out std_logic_vector (DATA_WIDTH downto 0)
+        shift_in           : in  std_logic_vector (DATA_WIDTH-1 downto 0);
+        shift_out          : out std_logic_vector (DATA_WIDTH-1 downto 0)
         );
     end component;
     component DCOPhaser
@@ -110,6 +110,7 @@ signal ctr_FuncGen_WaveShaping : std_logic_vector(DATA_WIDTH-1 downto 0);
 signal ctr_FuncGen_RegisterOut1 : std_logic_vector(DATA_WIDTH-1 downto 0);
 signal ctr_FuncGen_RegisterOut2 : std_logic_vector(DATA_WIDTH-1 downto 0);
 signal ctr_FuncGen_RegisterOut3 : std_logic_vector(DATA_WIDTH-1 downto 0);
+signal ctr_FuncGen_RegisterOut4 : std_logic_vector(DATA_WIDTH-1 downto 0);
 
 begin
     RAMP : component DCOPhaser 
@@ -201,12 +202,21 @@ begin
         ctr_Scale_output   => ctr_FuncGen_Scale2
 
     );
+    REGISTER_4 : component Register_1
+    generic map(
+        DATA_WIDTH => DATA_WIDTH
+    )
+    port map(
+        clk => clk,
+        shift_in => ctr_FuncGen_Scale2,
+        shift_out => ctr_FuncGen_RegisterOut4
+    );
     OFFSET_2 : component Offset 
     generic map(
         DATA_WIDTH => DATA_WIDTH
     )
     port map(
-        ctr_Offset_input    => ctr_FuncGen_Scale2,
+        ctr_Offset_input    => ctr_FuncGen_RegisterOut4,
         ctr_Offset_val      => ctr_Scanner_PhaseOff2,
         ctr_Offset_output   => ctr_FuncGen_Offset2
     );
