@@ -4,7 +4,11 @@ use IEEE.numeric_std.all;
 use work.all;
 
 entity RegFile is
-  generic(M, N, C: integer); --M for address length, N for data width, C for total cells in the register file
+  generic(
+    M: integer := 16;
+    N: integer := 16;
+    C: integer := 65536
+  ); --M for address length, N for data width, C for total cells in the register file
   port(
     --Input ports
     WD: In std_logic_vector(N-1 downto 0);

@@ -2,7 +2,7 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use work.all;
-use std.env.stop;
+-- use std.env.stop;
 
 entity FB_test_bench is
 end entity FB_test_bench;
@@ -41,17 +41,17 @@ architecture test of FB_test_bench is
     signal int_clk       	        : std_logic := '0';
     signal int_en       	        : std_logic := '1';
 	signal int_reset     		    : std_logic := '1'; -- Reset before running!
-    signal int_clk_video_pixel_in   : std_logic;
-    signal int_VIDEO_PIXEL_IN       : std_logic_vector(24-1 downto 0);
+    signal int_clk_video_pixel_in   : std_logic := '0';
+    signal int_VIDEO_PIXEL_IN       : std_logic_vector(24-1 downto 0) := (others=>'0');
 	signal int_IF_RECV				: std_logic := '1';
-    signal int_H_IN                 : unsigned(10-1 downto 0);
-    signal int_V_IN                 : unsigned(10-1 downto 0);
-    signal int_Zoom                 : signed(8-1 downto 0);
-    signal int_H_Position           : signed(10-1 downto 0);
-    signal int_V_Position           : signed(10-1 downto 0);
-    signal int_H_Blanking           : unsigned(8-1 downto 0);
-    signal int_V_Blanking           : unsigned(8-1 downto 0);
-    signal int_status               : std_logic_vector(4-1 downto 0);
+    signal int_H_IN                 : unsigned(10-1 downto 0) := (others=>'0');
+    signal int_V_IN                 : unsigned(10-1 downto 0) := (others=>'0');
+    signal int_Zoom                 : signed(8-1 downto 0) := (others=>'0');
+    signal int_H_Position           : signed(10-1 downto 0) := (others=>'0');
+    signal int_V_Position           : signed(10-1 downto 0) := (others=>'0');
+    signal int_H_Blanking           : unsigned(8-1 downto 0) := (others=>'0');
+    signal int_V_Blanking           : unsigned(8-1 downto 0) := (others=>'0');
+    signal int_status               : std_logic_vector(4-1 downto 0) := (others=>'0');
     signal int_Xout                 : unsigned (10-1 downto 0);
     signal int_Yout                 : unsigned (10-1 downto 0);
     signal int_Rout                 : unsigned (8-1 downto 0);
@@ -73,6 +73,8 @@ architecture test of FB_test_bench is
                 clk_video_pixel_in  => int_clk_video_pixel_in,
                 VIDEO_PIXEL_IN      => int_VIDEO_PIXEL_IN,
 				IF_RECV				=> int_IF_RECV,
+				H_SCAN_IN           => int_H_IN,
+				V_SCAN_IN           => int_V_IN,
                 H_IN                => int_H_IN,
                 V_IN                => int_V_IN,
                 Zoom                => int_Zoom,
@@ -137,6 +139,6 @@ architecture test of FB_test_bench is
 		wait for half_pixel_clockcycle;
 	end loop;
   end loop;
-  stop;
+  -- stop;
   end process;
   end test;
