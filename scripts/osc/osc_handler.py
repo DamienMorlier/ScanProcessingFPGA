@@ -7,7 +7,7 @@ from pythonosc import osc_server
 import argparse
 import math
 
-osc_callback_type = Callable[[str, List[Any], List[Any]], None]
+osc_callback_type = Callable[[str, List[Any], List[Any]], None] | Callable[[str, List[Any]], None]
 
 class OSCHandler:
 
