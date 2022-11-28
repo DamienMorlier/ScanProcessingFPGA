@@ -1,27 +1,28 @@
 from typing import List, Any
-import pythonosc.dispatcher as dispatcher
-import pythonosc.osc_server as osc_server
+from osc_handler import OSCHandler
 
-def set_func_gen_freq(address: str, *args: List[Any]):
-    if len(args) != 1 or args[0] is not float:
-        return
+"""
+Here is a good guide on how OSC messages work:
+
+http://www.music.mcgill.ca/~gary/306/week9/osc.html
+"""
+
+def example_sub(osc_handler: OSCHandler):
+    def my_example_callback(addr: str, args: List[Any], data: List[Any]):
+        print(f"{addr} : {args} ; {data}")
     
-    print("Hello, damnation!")
-
-def func_gen_reset(address: str, *args: List[Any]):
-    print("FUNC GEN RESET!")
-
-def default_handler(address: str, *args: List[Any]):
-    print("DEFUALT")
+    osc_handler.subscribe("/example", my_example_callback)
 
 def main():
-    disp = dispatcher.Dispatcher()
-    disp.map("/func_gen/0/set_freq", set_func_gen_freq)
-    disp.map("/func_gen/0/reset", func_gen_reset)
-    disp.set_default_handler(default_handler)
+    ## Initialize OSC handling
+    osc_handler = OSCHandler("0.0.0.0", 5005)
     
-    server = osc_server.BlockingOSCUDPServer(("127.0.0.1", 1337), disp)
-    server.serve_forever()
+    ## Initialize hardware wrappers
+    example_sub(osc_handler)
+    
+    ## Serve 
+    osc_handler.serve()
+    
 
 if __name__ == "__main__":
     main()
