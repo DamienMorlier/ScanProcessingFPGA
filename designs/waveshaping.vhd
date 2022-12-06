@@ -100,6 +100,7 @@ if rising_edge(clk) then
 				ctr_Waveshaping_output <= '0' & square;
 			end if;
 		when SINE_WAVE => 
+		    s_axis_phase_tdata <= ctr_Waveshaping_input;
 			ctr_Waveshaping_output <= m_axis_data_tdata;
 		when TRIANGLE_WAVE =>
 			ctr_Waveshaping_output <= tri_output_vector(32-1 downto 32-DATA_WIDTH);

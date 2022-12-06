@@ -72,9 +72,6 @@ architecture behaviour of FunctionGenerator is
             ctr_Offset_val      : in std_logic_vector(DATA_WIDTH-1 downto 0);
             ctr_Offset_output   : out std_logic_vector(DATA_WIDTH-1 downto 0)
         );
-    
-        
-        
     end component;
 
     component scaling
@@ -100,18 +97,28 @@ architecture behaviour of FunctionGenerator is
         );
     end component;
 
-
-signal ctr_FuncGen_Saw          : std_logic_vector(DATA_WIDTH-1 downto 0);
-signal ctr_FuncGen_SwitchOut    : std_logic_vector(DATA_WIDTH-1 downto 0);
-signal ctr_FuncGen_Offset1      : std_logic_vector(DATA_WIDTH-1 downto 0);
-signal ctr_FuncGen_Offset2      : std_logic_vector(DATA_WIDTH-1 downto 0);
-signal ctr_FuncGen_Scale1       : std_logic_vector(DATA_WIDTH-1 downto 0);
-signal ctr_FuncGen_Scale2       : std_logic_vector(DATA_WIDTH-1 downto 0);
-signal ctr_FuncGen_WaveShaping : std_logic_vector(DATA_WIDTH-1 downto 0);
-signal ctr_FuncGen_RegisterOut1 : std_logic_vector(DATA_WIDTH-1 downto 0);
-signal ctr_FuncGen_RegisterOut2 : std_logic_vector(DATA_WIDTH-1 downto 0);
-signal ctr_FuncGen_RegisterOut3 : std_logic_vector(DATA_WIDTH-1 downto 0);
-signal ctr_FuncGen_RegisterOut4 : std_logic_vector(DATA_WIDTH-1 downto 0);
+	-- Controller Registers
+	signal ctr_Scanner_Sync_Reg                : std_logic; --/Sync
+	signal ctr_Scanner_Switch_Reg              : std_logic;
+	signal ctr_Scanner_Frequency_Reg           : std_logic_vector(DATA_WIDTH-1 downto 0); --/Frequency
+	signal ctr_Scanner_Scale1_Reg              : std_logic_vector(DATA_WIDTH-1 downto 0);--/Harmonic
+	signal ctr_Scanner_Scale2_Reg              : std_logic_vector(DATA_WIDTH-1 downto 0);--/Scale
+	signal ctr_Scanner_PhaseOff1_Reg           : std_logic_vector(DATA_WIDTH-1 downto 0);--/PhaseShift1(Offset)
+	signal ctr_Scanner_PhaseOff2_Reg           : std_logic_vector(DATA_WIDTH-1 downto 0);--/PhaseShift2(Phase)
+	signal ctr_Scanner_Waveform_Reg            : std_logic_vector(3 downto 0);--/Waveform
+	
+	-- Wiring
+	signal ctr_FuncGen_Saw          : std_logic_vector(DATA_WIDTH-1 downto 0);
+	signal ctr_FuncGen_SwitchOut    : std_logic_vector(DATA_WIDTH-1 downto 0);
+	signal ctr_FuncGen_Offset1      : std_logic_vector(DATA_WIDTH-1 downto 0);
+	signal ctr_FuncGen_Offset2      : std_logic_vector(DATA_WIDTH-1 downto 0);
+	signal ctr_FuncGen_Scale1       : std_logic_vector(DATA_WIDTH-1 downto 0);
+	signal ctr_FuncGen_Scale2       : std_logic_vector(DATA_WIDTH-1 downto 0);
+	signal ctr_FuncGen_WaveShaping	: std_logic_vector(DATA_WIDTH-1 downto 0);
+	signal ctr_FuncGen_RegisterOut1 : std_logic_vector(DATA_WIDTH-1 downto 0);
+	signal ctr_FuncGen_RegisterOut2 : std_logic_vector(DATA_WIDTH-1 downto 0);
+	signal ctr_FuncGen_RegisterOut3 : std_logic_vector(DATA_WIDTH-1 downto 0);
+	signal ctr_FuncGen_RegisterOut4 : std_logic_vector(DATA_WIDTH-1 downto 0);
 
 begin
     RAMP : component DCOPhaser 
@@ -121,9 +128,9 @@ begin
     port map(
         reset                   =>      reset,
         clk                     =>      clk,
-        ctr_DCO_Phaser_sync     =>      ctr_Scanner_Sync,
-        ctr_DCOPhaser_frequency =>      ctr_Scanner_Frequency,
-        ctr_DCOPhaser_output    =>      ctr_FuncGen_Saw        
+        ctr_DCO_Phaser_sync     =>      ctr_Scanner_Sync_Reg,
+        ctr_DCOPhaser_frequency =>      ctr_Scanner_Frequency_Reg,
+        ctr_DCOPhaser_output    =>      ctr_FuncGen_Saw
 
     );
     SWITCH_1 : component Switch
@@ -133,8 +140,8 @@ begin
     port map(
         ctr_DCO_OUT                     => ctr_FuncGen_Saw,
         ctr_Scanner_External_RAMP_IN    => ctr_Scanner_External_RAMP_IN,
-        ctr_Switch_In                   => ctr_Scanner_Switch,                   
-        ctr_Switch_Out                  => ctr_FuncGen_SwitchOut               
+        ctr_Switch_In                   => ctr_Scanner_Switch_Reg,                   
+        ctr_Switch_Out                  => ctr_FuncGen_SwitchOut             
     );
     OFFSET_1 : component Offset 
     generic map(
@@ -142,7 +149,7 @@ begin
     )
     port map(
         ctr_Offset_input    => ctr_FuncGen_SwitchOut,
-        ctr_Offset_val      => ctr_Scanner_PhaseOff1,
+        ctr_Offset_val      => ctr_Scanner_PhaseOff1_Reg,
         ctr_Offset_output   => ctr_FuncGen_Offset1
     );
     REGISTER_0 : component Register_1
@@ -160,7 +167,7 @@ begin
     )
     port map(
         ctr_Scale_input    => ctr_FuncGen_RegisterOut1,
-        ctr_Scale_value    => ctr_Scanner_Scale1,
+        ctr_Scale_value    => ctr_Scanner_Scale1_Reg,
         ctr_Scale_output   => ctr_FuncGen_Scale1
 
     );
@@ -180,7 +187,7 @@ begin
     port map(
         clk                         => clk,
         reset                       => reset,
-        ctr_Waveshaping_waveform    => ctr_Scanner_Waveform,
+        ctr_Waveshaping_waveform    => ctr_Scanner_Waveform_Reg,
         ctr_Waveshaping_input       => ctr_FuncGen_RegisterOut2,
         ctr_Waveshaping_output      => ctr_FuncGen_WaveShaping
     );
@@ -200,7 +207,7 @@ begin
     )
     port map(
         ctr_Scale_input    => ctr_FuncGen_RegisterOut3,
-        ctr_Scale_value    => ctr_Scanner_Scale2,
+        ctr_Scale_value    => ctr_Scanner_Scale2_Reg,
         ctr_Scale_output   => ctr_FuncGen_Scale2
 
     );
@@ -219,10 +226,33 @@ begin
     )
     port map(
         ctr_Offset_input    => ctr_FuncGen_RegisterOut4,
-        ctr_Offset_val      => ctr_Scanner_PhaseOff2,
+        ctr_Offset_val      => ctr_Scanner_PhaseOff2_Reg,
         ctr_Offset_output   => ctr_FuncGen_Offset2
     );
 
     ctr_Bipolar_OUT <= ctr_FuncGen_Offset2(ctr_FuncGen_Offset2'length - 1 downto ctr_FuncGen_Offset2'length - ctr_Bipolar_OUT'length);
     ctr_DCO_OUT     <= ctr_FuncGen_Saw(ctr_FuncGen_Saw'length - 1 downto ctr_FuncGen_Saw'length - ctr_DCO_OUT'length);
+	
+	REG_REFRESHER: process(reset, clk, en)
+	begin
+		if(reset = '1') then
+			ctr_Scanner_Sync_Reg            	   <= '0';
+			ctr_Scanner_Switch_Reg          	   <= '0';
+			ctr_Scanner_Frequency_Reg       	   <= (others => '0');
+			ctr_Scanner_Scale1_Reg          	   <= (others => '0');
+			ctr_Scanner_Scale2_Reg          	   <= (others => '0');
+			ctr_Scanner_PhaseOff1_Reg       	   <= (others => '0');
+			ctr_Scanner_PhaseOff2_Reg       	   <= (others => '0');
+			ctr_Scanner_Waveform_Reg        	   <= (others => '0');
+		elsif (rising_edge(clk) and en = '1') then
+			ctr_Scanner_Sync_Reg            	   <= ctr_Scanner_Sync;
+			ctr_Scanner_Switch_Reg          	   <= ctr_Scanner_Switch;
+			ctr_Scanner_Frequency_Reg       	   <= ctr_Scanner_Frequency;
+			ctr_Scanner_Scale1_Reg          	   <= ctr_Scanner_Scale1;
+			ctr_Scanner_Scale2_Reg          	   <= ctr_Scanner_Scale2;
+			ctr_Scanner_PhaseOff1_Reg       	   <= ctr_Scanner_PhaseOff1;
+			ctr_Scanner_PhaseOff2_Reg       	   <= ctr_Scanner_PhaseOff2;
+			ctr_Scanner_Waveform_Reg        	   <= ctr_Scanner_Waveform;
+		end if;
+	end process;
 end behaviour;

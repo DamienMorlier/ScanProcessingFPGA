@@ -3,7 +3,7 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use work.CONN_MAT_PACKAGE.all;
 
--- The boty of the connection matrix (Yudong Lin)
+-- The body of the connection matrix (Yudong Lin)
 
 entity CONN_MAT is 
 	generic(
