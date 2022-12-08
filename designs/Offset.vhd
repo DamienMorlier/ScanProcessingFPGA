@@ -16,7 +16,7 @@ port(
 end offset;
 
 architecture behave of offset is
- 
+	
 begin
   ctr_Offset_output <= std_logic_vector(unsigned(ctr_Offset_input) + unsigned(ctr_Offset_val));
 end behave;

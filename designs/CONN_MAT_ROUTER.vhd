@@ -35,6 +35,8 @@ begin
 					output_index := i*6 + j;
 					if (ADDR_BUFFER(output_index) = '1') then
 						DATA_OUT <= DATA_IN(i);
+					else
+						DATA_OUT <= (others => '0');
 					end if;
 				end loop;
 			end loop;

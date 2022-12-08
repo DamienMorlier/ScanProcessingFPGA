@@ -49,14 +49,14 @@ begin
             output <= (others => '0');
         elsif (rising_edge(clk)) then
             -- 1/4 ~ 3/4
-            if (unsigned(index) >= 2048 and unsigned(index) < 6144) then
-                temp := 2** output'length - 1 - 524288 * ( to_integer(unsigned(index)) - 2048);
+            if (unsigned(index) >= 2 ** (index'length - 2) and unsigned(index) < 3 * 2 ** (index'length - 2)) then
+                temp := 2** output'length - 1 - (2 ** (output'length - index'length + 1)) * ( to_integer(unsigned(index)) - 2 ** (index'length - 2));
             -- 3/4 ~ 1
-            elsif (unsigned(index) >= 6144) then
-                temp := 524288 * ( to_integer(unsigned(index)) - 6144);
+            elsif (unsigned(index) >= 3 * 2 ** (index'length - 2)) then
+                temp := 2 ** (output'length - index'length + 1) * ( to_integer(unsigned(index)) - 3 * 2 ** (index'length - 2));
             -- 0 ~ 1/4
             else
-                temp := 524288 * ( to_integer(unsigned(index)) - 0);
+                temp := 2 ** (output'length - index'length + 1) * ( to_integer(unsigned(index)) - 0);
             end if;
             output <= std_logic_vector(to_signed(temp, output'length)) ;
         end if;
