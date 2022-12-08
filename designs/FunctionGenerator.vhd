@@ -604,14 +604,15 @@ begin
 			ctr_Scanner_Waveform_Reg        	   <= ctr_Scanner_Waveform;
 			
 			-- Translate frequency data into phase increment. 
-			-- Warning! This slow function generator has a frequency precision of approx. 0.15Hz, 
-			-- That is, the real output frequency = ctr_Scanner_Frequency / 10 < 5000 Hz. 
-			if(unsigned(ctr_Scanner_Frequency) < 5000) then
+			-- This should be an integer value of a ctr_Scanner_Frequency kHz.
+			-- Warning! This fast function generator has a frequency precision of approx. 1.5kHz, 
+			-- That is, the real output frequency = ctr_Scanner_Frequency / 100000 < 100 MHz. 
+			if(unsigned(ctr_Scanner_Frequency) < 100000) then
 				ctr_Scanner_Frequency_Reg <= 
 					std_logic_vector(to_unsigned(to_integer(unsigned(ctr_Scanner_Frequency)) * 2 ** 16 / 10000, ctr_Scanner_Frequency_Reg'length));
 			else 
 				ctr_Scanner_Frequency_Reg <= 
-					std_logic_vector(to_unsigned((5000 * 2 ** 16 / 10000), ctr_Scanner_Frequency_Reg'length));
+					std_logic_vector(to_unsigned((100000 * 2 ** 16 / 100000), ctr_Scanner_Frequency_Reg'length));
 			end if;
 			
 		end if;
