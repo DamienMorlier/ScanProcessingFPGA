@@ -104,7 +104,7 @@ def Waveform(addr: str, funcGen: int, data: List[Any]):
 
 def main():
     ## Initialize OSC handling
-    osc_handler = OSCHandler("0.0.0.0", 5005)
+    osc_handler = OSCHandler("192.168.2.99", 5005)
     
     ## Initialize hardware wrappers
     
