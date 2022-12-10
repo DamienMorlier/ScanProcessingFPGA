@@ -124,31 +124,8 @@ begin
 		end if;
 	end process;
 	
-	-- Old generators, area consuming
-	-- GEN_MAT_old: for i in 0 to N_GENERATORS-1 generate
-		-- U_GEN_SLOW: entity work.FunctionGenerator(behaviour)
-			-- generic map(DATA_WIDTH=>16)
-			-- port map(
-				-- clk => clk, 
-				-- reset => reset,
-				-- en => GEN_SELECTOR_EN(i),
-				-- ctr_Scanner_Sync => ctr_Scanner_Sync,
-				-- ctr_Scanner_External_Ramp_in => ctr_Scanner_External_Ramp_in, 
-				-- ctr_Scanner_Switch => ctr_Scanner_Switch,
-				-- ctr_Scanner_Frequency => ctr_Scanner_Frequency,
-				-- ctr_Scanner_Scale1 => ctr_Scanner_Scale1,
-				-- ctr_Scanner_Scale2 => ctr_Scanner_Scale2,
-				-- ctr_Scanner_PhaseOff1 => ctr_Scanner_PhaseOff1,
-				-- ctr_Scanner_PhaseOff2 => ctr_Scanner_PhaseOff2,
-				-- ctr_Scanner_Waveform => ctr_Scanner_Waveform,
-				-- ctr_DCO_OUT => GEN_DCO_OUT(i),
-				-- ctr_Bipolar_OUT => GEN_OUTPUT(i)
-			-- );
-			
-	-- Robin ver generators
-	-- First two are fast generators that supports high definition video scanning
-	GEN_MAT_FAST: for i in 0 to 1 generate
-		U_GEN_FAST: entity work.FunctionGenerator(behaviour_robin_ver_fast)
+	GEN_MAT: for i in 0 to 32-1 generate
+		U_GEN: entity work.FunctionGenerator(behaviour)
 			generic map(DATA_WIDTH=>16)
 			port map(
 				clk => clk, 
@@ -156,28 +133,9 @@ begin
 				en => GEN_SELECTOR_EN(i),
 				ctr_Scanner_Sync => ctr_Scanner_Sync,
 				ctr_Scanner_External_Ramp_in => ctr_Scanner_External_Ramp_in, 
-				ctr_Scanner_Switch => ctr_Scanner_Switch,
-				ctr_Scanner_Frequency => ctr_Scanner_Frequency,
-				ctr_Scanner_Scale1 => ctr_Scanner_Scale1,
-				ctr_Scanner_Scale2 => ctr_Scanner_Scale2,
-				ctr_Scanner_PhaseOff1 => ctr_Scanner_PhaseOff1,
-				ctr_Scanner_PhaseOff2 => ctr_Scanner_PhaseOff2,
-				ctr_Scanner_Waveform => ctr_Scanner_Waveform,
-				ctr_DCO_OUT => GEN_DCO_OUT(i),
-				ctr_Bipolar_OUT => GEN_OUTPUT(i)
-			);
-	end generate;
-	
-	-- The remaining 22 are slow oscillators for modulations (<5000 Hz)
-	GEN_MAT_SLOW: for i in 2 to N_GENERATORS-1 generate
-		U_GEN_SLOW: entity work.FunctionGenerator(behaviour_robin_ver_slow)
-			generic map(DATA_WIDTH=>16)
-			port map(
-				clk => clk, 
-				reset => reset,
-				en => GEN_SELECTOR_EN(i),
-				ctr_Scanner_Sync => ctr_Scanner_Sync,
-				ctr_Scanner_External_Ramp_in => ctr_Scanner_External_Ramp_in, 
+				
+				-- All inputs below are strongly suggested to be registered 
+				-- for better run-time independence. Yudong Lin
 				ctr_Scanner_Switch => ctr_Scanner_Switch,
 				ctr_Scanner_Frequency => ctr_Scanner_Frequency,
 				ctr_Scanner_Scale1 => ctr_Scanner_Scale1,
@@ -198,7 +156,7 @@ begin
 			P_MULT_IN => P_MULT,
 			P_ADD_IN => P_ADD,
 			WIRING_MODIFIER_ENABLER => WIRING_MODIFIER_ENABLER,
-			WIRING_MODIFIER_PARAM => WIRING_MODIFIER_PARAM(N_GENERATORS - 1 downto 0),
+			WIRING_MODIFIER_PARAM => WIRING_MODIFIER_PARAM,
 			X_mod => X_mod,
 			Y_mod => Y_mod,
 			Z_mod => Z_mod,
