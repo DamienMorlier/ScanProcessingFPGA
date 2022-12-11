@@ -40,20 +40,15 @@ entity DataPath is
 		-- Analog controller output
 		Xout, Yout: out std_logic_vector (10-1 downto 0);
 		Rout, Gout, Bout: out std_logic_vector (8-1 downto 0);
-		Iout: out std_logic_vector (8-1 downto 0)
+		Iout: out std_logic_vector (8-1 downto 0);
+		
+		-- For testing
+		Gen_probe: out std_logic_vector (10-1 downto 0) -- Function generator scope
 	);
 end DataPath;
 
 architecture behave of DataPath is
 	-- Wiring ----------------------------
-	-- HDMI input parser
-	-- signal HDMI_VIDEO_PIXEL: std_logic_vector(24-1 downto 0);
-	--signal vid_pVDE, vid_pHSync, vid_pVSync: std_logic;
-	signal clk_video_reLock: std_logic;
-	signal CTRL_WORD: std_logic_vector(8-1 downto 0);
-	signal clk_video_pixel, clk_video_pixel_5x, clk_video_pixel_Lckd, CTRL_SIG: std_logic;
-	-- Optional DDC port
-	signal DDC_SDA_I, DDC_SDA_O, DDC_SDA_T, DDC_SCL_I, DDC_SCL_O, DDC_SCL_T: std_logic;
 	
 	-- USB generator controller parser
 	signal ctr_FrameBuffer_Zoom: signed(8-1 downto 0);
@@ -63,10 +58,6 @@ architecture behave of DataPath is
 	-- Following the FunctionGenerator.vhd
 	signal ctr_Scanner_Sync, ctr_Scanner_Switch: std_logic;
 	
-	-- Scanning generator output
-	signal I_OUT, B_OUT: std_logic; -- Seems the generator is not fully developed
-	signal DCO_OUT: std_logic_vector(10-1 downto 0);
-	
 	-- Buffer output
 	signal buffer_status: std_logic_vector(4-1 downto 0);
 	signal buffer_Xout, buffer_Yout: unsigned (10-1 downto 0);
@@ -74,8 +65,7 @@ architecture behave of DataPath is
 	
 	-- Generators and Connection Matrix
 	signal P_MULT: PARAM_BUS;
-	signal P_ADD: PARAM_BUS;	
-	signal GEN_DCO_OUT: CONTROLLER_IN_BUS;	-- Ramp signal output
+	signal P_ADD: PARAM_BUS;
 	signal GEN_OUTPUT: CONTROLLER_IN_BUS;	-- True output
 	signal GEN_SELECTOR_EN: std_logic_vector(32-1 downto 0);
 	signal X_mod, Y_mod, Z_mod, I_mod, -- Signed type
@@ -106,26 +96,35 @@ begin
 	begin
 		if(reset = '1') then
 			for i in 0 to N_CALC_UNITS-1 loop
-				P_MULT(i) <= std_logic_vector(to_unsigned(1, DATA_WIDTH));
-				P_ADD(i) <= std_logic_vector(to_unsigned(0, DATA_WIDTH));
+				P_MULT(i) <= std_logic_vector(to_signed(1, DATA_WIDTH));
+				P_ADD(i) <= std_logic_vector(to_signed(0, DATA_WIDTH));
 			end loop;
+			
+			Gen_probe <= (others => '0');
 		else
 			if(en= '1' and rising_edge(clk)) then
 				for i in 0 to N_CALC_UNITS-1 loop
-					if(GEN_SELECTOR_EN(i)='1') then
+					if(GEN_SELECTOR_EN(i)='1') then 
+					    -- Low index high priority. Only set the selected generator with the lowest index
 						if(P_PARAM_SEL = '0') then
 							P_MULT(i) <= P_MULT_IN;
 						elsif(P_PARAM_SEL = '1') then
 							P_ADD(i) <= P_ADD_IN;
 						end if;
+						
+						-- For testing use. Output the selected generator. 
+						Gen_probe <= GEN_OUTPUT(i/2);
+						exit;
 					end if;
 				end loop;
 			end if;
 		end if;
 	end process;
-	
-	GEN_MAT: for i in 0 to 32-1 generate
-		U_GEN: entity work.FunctionGenerator(behaviour)
+			
+	-- Robin ver generators
+	-- First two are fast generators that supports high definition video scanning
+	GEN_MAT_FAST: for i in 0 to 1 generate
+		U_GEN_FAST: entity work.FunctionGenerator(behaviour_robin_ver_fast)
 			generic map(DATA_WIDTH=>16)
 			port map(
 				clk => clk, 
@@ -133,9 +132,6 @@ begin
 				en => GEN_SELECTOR_EN(i),
 				ctr_Scanner_Sync => ctr_Scanner_Sync,
 				ctr_Scanner_External_Ramp_in => ctr_Scanner_External_Ramp_in, 
-				
-				-- All inputs below are strongly suggested to be registered 
-				-- for better run-time independence. Yudong Lin
 				ctr_Scanner_Switch => ctr_Scanner_Switch,
 				ctr_Scanner_Frequency => ctr_Scanner_Frequency,
 				ctr_Scanner_Scale1 => ctr_Scanner_Scale1,
@@ -143,7 +139,29 @@ begin
 				ctr_Scanner_PhaseOff1 => ctr_Scanner_PhaseOff1,
 				ctr_Scanner_PhaseOff2 => ctr_Scanner_PhaseOff2,
 				ctr_Scanner_Waveform => ctr_Scanner_Waveform,
-				ctr_DCO_OUT => GEN_DCO_OUT(i),
+				-- ctr_DCO_OUT => GEN_DCO_OUT(i),
+				ctr_Bipolar_OUT => GEN_OUTPUT(i)
+			);
+	end generate;
+	
+	-- The remaining 22 are slow oscillators for modulations (<5000 Hz)
+	GEN_MAT_SLOW: for i in 2 to N_GENERATORS-1 generate
+		U_GEN_SLOW: entity work.FunctionGenerator(behaviour_robin_ver_slow)
+			generic map(DATA_WIDTH=>16)
+			port map(
+				clk => clk, 
+				reset => reset,
+				en => GEN_SELECTOR_EN(i),
+				ctr_Scanner_Sync => ctr_Scanner_Sync,
+				ctr_Scanner_External_Ramp_in => ctr_Scanner_External_Ramp_in, 
+				ctr_Scanner_Switch => ctr_Scanner_Switch,
+				ctr_Scanner_Frequency => ctr_Scanner_Frequency,
+				ctr_Scanner_Scale1 => ctr_Scanner_Scale1,
+				ctr_Scanner_Scale2 => ctr_Scanner_Scale2,
+				ctr_Scanner_PhaseOff1 => ctr_Scanner_PhaseOff1,
+				ctr_Scanner_PhaseOff2 => ctr_Scanner_PhaseOff2,
+				ctr_Scanner_Waveform => ctr_Scanner_Waveform,
+				-- ctr_DCO_OUT => GEN_DCO_OUT(i),
 				ctr_Bipolar_OUT => GEN_OUTPUT(i)
 			);
 	end generate;
@@ -156,7 +174,7 @@ begin
 			P_MULT_IN => P_MULT,
 			P_ADD_IN => P_ADD,
 			WIRING_MODIFIER_ENABLER => WIRING_MODIFIER_ENABLER,
-			WIRING_MODIFIER_PARAM => WIRING_MODIFIER_PARAM,
+			WIRING_MODIFIER_PARAM => WIRING_MODIFIER_PARAM(N_GENERATORS - 1 downto 0),
 			X_mod => X_mod,
 			Y_mod => Y_mod,
 			Z_mod => Z_mod,
