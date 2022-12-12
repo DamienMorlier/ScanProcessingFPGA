@@ -18,27 +18,25 @@ architecture behaviour of CONN_MAT_ROUTER is
 	signal ADDR_BUFFER: std_logic_vector(ADDR_WIDTH-1 downto 0);
 begin
 	-- Main process
-	process (reset, clk, en)
-		variable output_index: integer := 0;
+	process (reset, clk, en, DATA_IN)
 	begin
 		if (reset = '1') then
 			DATA_OUT <= (others => '0');
 			ADDR_BUFFER <= (others => '0');
 		else 
-			if (rising_edge(clk) and en = '1') then
-				ADDR_BUFFER <= ADDR_CHECK(ADDR_IN);
+			if (rising_edge(clk) AND en = '1') then
+				ADDR_BUFFER <= ADDR_IN;
 			end if;
 			
 			-- Concurrent switchers
-			for i in 0 to 4-1 loop	-- For fanout buffers
-				for j in 0 to ADDR_WIDTH/4-1 loop	-- For outputs following this fanout buffer
-					output_index := i*6 + j;
-					if (ADDR_BUFFER(output_index) = '1') then
-						DATA_OUT <= DATA_IN(i);
-					end if;
-				end loop;
-			end loop;
-			
+            for i in 0 to ADDR_WIDTH-1 loop
+                if (ADDR_BUFFER(i) = '1') then
+                    DATA_OUT <= DATA_IN(i);
+                    exit;
+                else
+                    DATA_OUT <= (others => '0');
+                end if;
+            end loop;
 		end if;
 	end process;
 	

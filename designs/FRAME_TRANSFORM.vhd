@@ -22,7 +22,7 @@ entity FRAME_TRANS is
 		VIDEO_PIXEL_IN: in std_logic_vector(24-1 downto 0);
 		
 		-- Coordinators input
-		H_SCAN_IN, V_SCAN_IN: in unsigned(10-1 downto 0); 
+		H_SCAN_IN, V_SCAN_IN: in std_logic_vector(10-1 downto 0); 
 		
 		-- Zoom parameter, -100 for 0% and 100 for 200% zoom ratio
 		Zoom: in signed(8-1 downto 0);
@@ -53,6 +53,7 @@ begin
 	READ_OUT: process(clk, reset, en)
 		variable Xout_temp, Yout_temp: signed(18-1 downto 0); 
 		variable Xclamping, Yclamping: integer;
+		variable zm, h_bl, v_bl: integer;
 		variable Rout_temp, Gout_temp, Bout_temp, Iout_temp: unsigned(8-1 downto 0); 
 	begin
 		if(reset = '1') then
@@ -73,36 +74,37 @@ begin
 				Bout_temp := unsigned(VIDEO_PIXEL_IN(8-1 downto 0));
 				Iout_temp := (Rout_temp + Gout_temp + Bout_temp) / 3;
 				
-				-- Transformation
-				Xout_temp := ( signed(V_SCAN_IN) - V_RES / 2 ) * (100 + Zoom) / 100 + V_RES / 2 + V_Position;
-				Yout_temp := ( signed(H_SCAN_IN) - H_RES / 2 ) * (100 + Zoom) / 100 + H_RES / 2 + H_Position;
-				-- For Debugging
-				report "Xout_temp = "& integer'image(to_integer(Xout_temp));
-				report "Yout_temp = "& integer'image(to_integer(Yout_temp));
+				-- Zooming
+				if(to_integer(Zoom) > 100) then zm := 100;
+				elsif(to_integer(Zoom) < -100) then zm := -100;
+				else zm := to_integer(Zoom);
+				end if;
+				Xout_temp := signed(H_SCAN_IN) * (100 + to_signed(zm, Zoom'length)) / 100 + H_RES / 2 + H_Position;
+				Yout_temp := signed(V_SCAN_IN) * (100 + to_signed(zm, Zoom'length)) / 100 + V_RES / 2 + V_Position;
 				
 				-- Clamper
-				Xclamping := V_RES * (100 - to_integer(V_Blanking)) / 100;
-				Yclamping := H_RES * (100 - to_integer(H_Blanking)) / 100;
-				-- For Debugging
-				report "Xclamping = "& integer'image(Xclamping);
-				report "Yclamping = "& integer'image(Yclamping);
-				-- stop;
+				if(to_integer(H_Blanking) > 100) then h_bl := 100;
+				else h_bl := to_integer(H_Blanking);
+				end if;
+				if(to_integer(V_Blanking) > 100) then v_bl := 100;
+				else v_bl := to_integer(V_Blanking);
+				end if;
+				Xclamping := H_RES * (100 - h_bl) / 100;
+				Yclamping := V_RES * (100 - v_bl) / 100;
 				
 				-- Clamping and Blanking
-				if (((Xout_temp < 0) or (Xout_temp > V_RES - 1))
-					or ((Yout_temp < 0) or (Yout_temp > H_RES - 1))
+				if (((Xout_temp < 0) or (Xout_temp > H_RES - 1))
+					or ((Yout_temp < 0) or (Yout_temp > V_RES - 1))
 					or (Xout_temp > Xclamping)
 					or (Yout_temp > Yclamping)) then
 					Iout <= (others => '0');
 					Rout <= (others => '0');
 					Gout <= (others => '0');
 					Bout <= (others => '0');
-					Xout <= (others => '0');
-					Yout <= (others => '0');
 				else
 					-- Output
-					Xout <= unsigned(Xout_temp(10-1 downto 0));
-					Yout <= unsigned(Yout_temp(10-1 downto 0));
+					Xout <= unsigned(Xout_temp(10 - 1 downto 0));
+					Yout <= unsigned(Yout_temp(10 - 1 downto 0));
 					Rout <= Rout_temp;
 					Gout <= Gout_temp;
 					Bout <= Bout_temp;

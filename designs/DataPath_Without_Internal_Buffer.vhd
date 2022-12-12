@@ -19,6 +19,8 @@ entity DataPath is
         ctr_Scanner_PhaseOff1           : in std_logic_vector(16-1 downto 0);--/PhaseShift1(Offset)
         ctr_Scanner_PhaseOff2           : in std_logic_vector(16-1 downto 0);--/PhaseShift2(Phase)
         ctr_Scanner_Waveform            : in std_logic_vector(3 downto 0);--/Waveform
+		ctr_Phase_Reset					: in std_logic;	--/Reset, set all generators' phase back to 0
+		ctr_Sync						: in std_logic; --/Sync
 		
 		-- Static adjustable variables
 		ctr_Perspective_Distance		: in std_logic_vector(8-1 downto 0);--/A, perspective distance, unsigned
@@ -27,7 +29,7 @@ entity DataPath is
 		ctr_Perspective_Shift_Y			: in std_logic_vector(8-1 downto 0);--/Sy, signed
 		
 		-- Connection Matrix Parameters
-		P_PARAM_SEL: in std_logic; -- 0 for mult, 1 for add
+		P_PARAM_SEL: in std_logic; -- 1 for loading new coefficients, 0 for latched state
 		P_MULT_IN: in std_logic_vector(10-1 downto 0);
 		P_ADD_IN: in std_logic_vector(10-1 downto 0);	
 		WIRING_MODIFIER_ENABLER: in std_logic_vector(2 * 12 -1 downto 0);
@@ -104,16 +106,21 @@ begin
 		else
 			if(en= '1' and rising_edge(clk)) then
 				for i in 0 to N_CALC_UNITS-1 loop
-					if(GEN_SELECTOR_EN(i)='1') then 
-					    -- Low index high priority. Only set the selected generator with the lowest index
-						if(P_PARAM_SEL = '0') then
+					if P_PARAM_SEL = '1' then
+						-- Low index high priority. Only set the selected generator with the lowest index
+						if(WIRING_MODIFIER_ENABLER(i * 2) = '1') then
 							P_MULT(i) <= P_MULT_IN;
-						elsif(P_PARAM_SEL = '1') then
+						end if;
+						if(WIRING_MODIFIER_ENABLER(i * 2 + 1) = '1') then
 							P_ADD(i) <= P_ADD_IN;
 						end if;
-						
-						-- For testing use. Output the selected generator. 
-						Gen_probe <= GEN_OUTPUT(i/2);
+					end if;
+				end loop;
+				
+				-- For testing use. Output the selected generator.
+				for i in 0 to 2*N_CALC_UNITS-1 loop
+					if GEN_SELECTOR_EN(i) = '1' then
+						Gen_probe <= GEN_OUTPUT(i);
 						exit;
 					end if;
 				end loop;
@@ -122,6 +129,8 @@ begin
 	end process;
 			
 	-- Robin ver generators
+	ctr_Scanner_Switch <= ctr_Sync;
+	ctr_Scanner_Sync <= ctr_Phase_Reset;
 	-- First two are fast generators that supports high definition video scanning
 	GEN_MAT_FAST: for i in 0 to 1 generate
 		U_GEN_FAST: entity work.FunctionGenerator(behaviour_robin_ver_fast)
@@ -167,6 +176,10 @@ begin
 	end generate;
 	
 	-- Here for process matrixes stuff
+	ctr_FrameBuffer_H_Position <= signed(H_position);
+	ctr_FrameBuffer_V_Position <= signed(V_position);
+	ctr_FrameBuffer_H_Blanking <= unsigned(H_blanking(DATA_WIDTH-1 downto DATA_WIDTH-8));
+	ctr_FrameBuffer_V_Blanking <= unsigned(V_blanking(DATA_WIDTH-1 downto DATA_WIDTH-8));
 	CONN_MATRIX: entity work.CONN_MAT(structural)
 		port map(
 			reset, en, clk,
@@ -212,9 +225,8 @@ begin
 		-- );
 		
 	-- For debugging only!!
-	ctr_FrameBuffer_X_Sel <= std_logic_vector(signed(X_mod) + to_signed(H_RES / 2, X_mod'length));
-	ctr_FrameBuffer_Y_Sel <= std_logic_vector(signed(Y_mod) + to_signed(V_RES / 2, Y_mod'length));
-	Iout <= std_logic_vector(buffer_Iout);
+	ctr_FrameBuffer_X_Sel <= X_mod;
+	ctr_FrameBuffer_Y_Sel <= Y_mod;
 	
 	--------------------------------------------------------------------
 	-- Frame Transformer router
@@ -222,7 +234,7 @@ begin
 		port map(
 			clk, en, reset,
 			HDMI_VIDEO_PIXEL, 
-			unsigned(ctr_FrameBuffer_Y_Sel), unsigned(ctr_FrameBuffer_X_Sel),
+			ctr_FrameBuffer_X_Sel, ctr_FrameBuffer_Y_Sel,
 			ctr_FrameBuffer_Zoom,
 			ctr_FrameBuffer_H_Position, ctr_FrameBuffer_V_Position, 
 			ctr_FrameBuffer_H_Blanking, ctr_FrameBuffer_V_Blanking,
@@ -232,7 +244,21 @@ begin
 		);
 	
 	-- Analog output stage
-	Xout <= std_logic_vector(buffer_Xout); Yout <= std_logic_vector(buffer_Yout); 
-	Rout <= std_logic_vector(buffer_Rout); Gout <= std_logic_vector(buffer_Gout); Bout <= std_logic_vector(buffer_Bout);
+	ANA_OUT: process(reset, clk, en) begin
+        if reset = '1' then
+            Xout <= (others => '0');
+            Yout <= (others => '0');
+            Rout <= (others => '0');
+            Gout <= (others => '0');
+            Bout <= (others => '0');
+            Iout <= (others => '0');
+        else
+            if(rising_edge(clk) and en = '1') then
+                Xout <= std_logic_vector(buffer_Xout); Yout <= std_logic_vector(buffer_Yout); 
+                Rout <= std_logic_vector(buffer_Rout); Gout <= std_logic_vector(buffer_Gout); Bout <= std_logic_vector(buffer_Bout);
+				Iout <= std_logic_vector(buffer_Iout);
+            end if;
+        end if;
+    end process;
 	        
 end behave; 

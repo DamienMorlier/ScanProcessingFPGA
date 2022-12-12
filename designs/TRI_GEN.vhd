@@ -36,27 +36,25 @@ entity TRI_GEN is
     Port ( clk : in STD_LOGIC;
            reset : in STD_LOGIC;
            index : in STD_LOGIC_VECTOR (13-1 downto 0);
-           output : out STD_LOGIC_VECTOR (32-1 downto 0));
+           output : out STD_LOGIC_VECTOR (16-1 downto 0));
 end TRI_GEN;
 
 architecture Behavioral of TRI_GEN is
     
 begin
     process(reset, clk) 
+        variable x: integer;
         variable temp: integer;
     begin
         if (reset = '1') then
             output <= (others => '0');
         elsif (rising_edge(clk)) then
-            -- 1/4 ~ 3/4
-            if (unsigned(index) >= 2048 and unsigned(index) < 6144) then
-                temp := 2** output'length - 1 - 524288 * ( to_integer(unsigned(index)) - 2048);
-            -- 3/4 ~ 1
-            elsif (unsigned(index) >= 6144) then
-                temp := 524288 * ( to_integer(unsigned(index)) - 6144);
-            -- 0 ~ 1/4
-            else
-                temp := 524288 * ( to_integer(unsigned(index)) - 0);
+            x := to_integer(signed(index));
+            -- 1/2 ~ 1
+            if (x >= 0) then
+                temp := 2 ** (output'length - 1) + 2 ** (output'length - index'length + 1) * x;
+            else -- 0 ~ 1/2
+                temp := - 2 ** (output'length - 1) + 2 ** (output'length - index'length + 1) * (0 - x);
             end if;
             output <= std_logic_vector(to_signed(temp, output'length)) ;
         end if;
