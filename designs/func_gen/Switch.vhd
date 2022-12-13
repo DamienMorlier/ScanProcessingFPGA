@@ -19,8 +19,9 @@ end Switch;
 architecture behaviour of Switch is 
 
 begin
-    P_LOGIC : process(ctr_Switch_In)
+    P_LOGIC : process(ctr_Switch_In,ctr_DCO_OUT)
     begin
+        ctr_Switch_Out <= ctr_DCO_OUT;
         if (ctr_Switch_In ='1') then 
             ctr_Switch_Out <= ctr_Scanner_External_RAMP_IN;
         else
