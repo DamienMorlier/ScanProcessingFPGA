@@ -14,7 +14,7 @@ params = ["sync", "harmonic", "frequency", "scale", "phase", "offset", "waveform
 
 def main():
     ## Initialize OSC handling
-    osc_handler = OSCHandler("0.0.0.0", 5005)
+    osc_handler = OSCHandler("192.168.2.99", 5005)
     
     paramsHandler = [osc_handler.Sync, osc_handler.Harmonic, osc_handler.Frequency, osc_handler.Scale, osc_handler.Phase, osc_handler.Offset, osc_handler.Waveform, osc_handler.Blanking_Width, osc_handler.Blanking_Phase]
     
