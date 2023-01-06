@@ -8,73 +8,48 @@ entity ROT_cell is
 	port(
 		reset, clk: in std_logic;
 		R: in unsigned(16 - 1 downto 0);
-		x1_in, x2_in: in float32; -- Unsigned in
-		x1_out, x2_out: out float32 -- Unsigned out
+		x1_in, x2_in: in float(5 downto -10); -- Unsigned in
+		x1_out, x2_out: out float(5 downto -10) -- Unsigned out
 	);
 end ROT_cell;
 
 architecture Behavioural of ROT_cell is
-	COMPONENT dds_cos
-	  PORT (
-		aclk : IN STD_LOGIC;
-		s_axis_phase_tvalid : IN STD_LOGIC;
-		s_axis_phase_tdata : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-		m_axis_data_tvalid : OUT STD_LOGIC;
-		m_axis_data_tdata : OUT STD_LOGIC_VECTOR(15 DOWNTO 0) 
-	  );
-	END COMPONENT;
-
-	COMPONENT dds_sine
-	  PORT (
-		aclk : IN STD_LOGIC;
-		s_axis_phase_tvalid : IN STD_LOGIC;
-		s_axis_phase_tdata : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-		m_axis_data_tvalid : OUT STD_LOGIC;
-		m_axis_data_tdata : OUT STD_LOGIC_VECTOR(15 DOWNTO 0) 
-	  );
-	END COMPONENT;
-	
-	signal s_axis_phase_tvalid, m_axis_data_tvalid: std_logic_vector(4-1 downto 0);
-	signal s_axis_phase_tdata_cos1, 
-		s_axis_phase_tdata_sin1, 
-		m_axis_data_tdata_cos1,  
-		m_axis_data_tdata_sin1 
-		: std_logic_vector(16-1 downto 0);
+	COMPONENT dds_sin_cos
+      PORT (
+        aclk : IN STD_LOGIC;
+        s_axis_phase_tvalid : IN STD_LOGIC;
+        s_axis_phase_tdata : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+        m_axis_data_tvalid : OUT STD_LOGIC;
+        m_axis_data_tdata : OUT STD_LOGIC_VECTOR(31 DOWNTO 0) 
+      );
+    END COMPONENT;
+	signal s_axis_phase_tvalid, m_axis_data_tvalid: std_logic;
+	signal s_axis_phase_tdata: std_logic_vector(16-1 downto 0);
+	signal m_axis_data_tdata: std_logic_vector(32-1 downto 0);
 begin
-	cos : dds_cos
-		PORT MAP (
-		aclk => clk,
-		s_axis_phase_tvalid => s_axis_phase_tvalid(0),
-		s_axis_phase_tdata => s_axis_phase_tdata_cos1,
-		m_axis_data_tvalid => m_axis_data_tvalid(0),
-		m_axis_data_tdata => m_axis_data_tdata_cos1
-	);
-
-	sin : dds_sine
-	  PORT MAP (
-		aclk => clk,
-		s_axis_phase_tvalid => s_axis_phase_tvalid(2),
-		s_axis_phase_tdata => s_axis_phase_tdata_sin1,
-		m_axis_data_tvalid => m_axis_data_tvalid(2),
-		m_axis_data_tdata => m_axis_data_tdata_sin1
-	  );
-
-	s_axis_phase_tdata_cos1 <= std_logic_vector(R);
-	s_axis_phase_tdata_sin1 <= std_logic_vector(R);
+    SIN_COS_LUT : dds_sin_cos
+      PORT MAP (
+        aclk => clk,
+        s_axis_phase_tvalid => s_axis_phase_tvalid,
+        s_axis_phase_tdata => s_axis_phase_tdata,
+        m_axis_data_tvalid => m_axis_data_tvalid,
+        m_axis_data_tdata => m_axis_data_tdata
+      );
+	s_axis_phase_tdata <= std_logic_vector(R);
 	
 	process (clk, reset)
-		variable cos1, sin1: float32;
+		variable cos1, sin1: float(5 downto -10);
 	begin
 		if(reset = '1') then
-			x1_out <= to_float(0);
-			x2_out <= to_float(0);
-			s_axis_phase_tvalid <= (others => '0');
+			x1_out <= to_float(0, x1_out);
+			x2_out <= to_float(0, x2_out);
+			s_axis_phase_tvalid <= '0';
 		else
-			cos1 := to_float32(to_float(signed(m_axis_data_tdata_cos1), 32) / 2 ** 16);
-			sin1 := to_float32(to_float(signed(m_axis_data_tdata_sin1), 32) / 2 ** 16);
+			cos1 := to_float(signed(m_axis_data_tdata(16-1 downto 0)), cos1) / 2 ** 16;
+			sin1 := to_float(signed(m_axis_data_tdata(32-1 downto 16)), sin1) / 2 ** 16;
 			
 			if(rising_edge(clk)) then
-				s_axis_phase_tvalid <= (others => '1');
+				s_axis_phase_tvalid <= '1';
 				x1_out <= x2_in * cos1 - x1_in * sin1;
 				x2_out <= x2_in * sin1 + x1_in * cos1;
 			end if;
@@ -95,15 +70,15 @@ entity ROT is
 		reset, clk: in std_logic;
 		X_in, Y_in, Z_in: in std_logic_vector(DATA_WIDTH - 1 downto 0);	-- Signed input
 		X_rot, Y_rot, Z_rot: in std_logic_vector(DATA_WIDTH - 1 downto 0);	-- Signed input
-		X_out, Y_out, Z_out: out float32
+		X_out, Y_out, Z_out: out float(5 downto -10)
 	);
 end ROT;
 
 architecture Behavioural of ROT is
-	constant bias: integer := 2**16 / 4;
-	signal xf, yf, zf: float32;	-- Float input
+	constant bias: integer := 2**DATA_WIDTH / 4;
+	signal xf, yf, zf: float(5 downto -10);	-- Float input
 	signal xr, yr, zr: unsigned(16-1 downto 0); -- Rotator params
-	signal zro1, zro2, xro1, xro2, yro1, yro2: float32; -- Rotator cell output
+	signal zro1, zro2, xro1, xro2, yro1, yro2: float(5 downto -10); -- Rotator cell output
 begin
 	-- Rotator cells instantiation
 	z_rot_cell: entity work.ROT_cell(Behavioural)
@@ -144,9 +119,9 @@ begin
 		variable xr_t, yr_t, zr_t: unsigned(16-1 downto 0);
 	begin
 		if(reset = '1') then
-			xf <= to_float(0);
-			yf <= to_float(0);
-			zf <= to_float(0);
+			xf <= to_float(0, xf);
+			yf <= to_float(0, yf);
+			zf <= to_float(0, zf);
 			xr <= (others => '0');
 			yr <= (others => '0');
 			zr <= (others => '0');
@@ -158,9 +133,9 @@ begin
 				zf <= to_float(signed(Z_in), zf) / 2**(DATA_WIDTH - 1);
 				
 				-- Rotation params need to be biased
-				xr_t := to_unsigned((to_integer(signed(X_rot)) * (2 ** (16 - DATA_WIDTH)) + bias + 2**16) mod 2**16, 16);
-				yr_t := to_unsigned((to_integer(signed(Y_rot)) * (2 ** (16 - DATA_WIDTH)) + 2**16) mod 2**16, 16);
-				zr_t := to_unsigned((to_integer(signed(Z_rot)) * (2 ** (16 - DATA_WIDTH)) - bias + 2**16) mod 2**16, 16);
+				xr_t := to_unsigned((to_integer(signed(X_rot)) + bias + 2**10) mod 2**10, 16);
+				yr_t := to_unsigned((to_integer(signed(Y_rot)) + 2**10) mod 2**10, 16);
+				zr_t := to_unsigned((to_integer(signed(Z_rot)) - bias + 2**10) mod 2**10, 16);
 				
 				xr <= xr_t;
 				yr <= yr_t;

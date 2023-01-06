@@ -12,15 +12,16 @@ package CONN_MAT_PACKAGE is
 	-- constant N_GENERATORS: integer := 2;	-- Number of function generators
     
 	-- TYPE DEF & CONSTANTS
-	constant H_RES: integer := 800; -- Horizontal resolution
-	constant V_RES: integer := 600; -- Vertical resolution
-	constant V_RATE: integer := 24; -- Refresh rate
+	constant H_RES: integer := 640; -- Horizontal resolution
+	constant V_RES: integer := 480; -- Vertical resolution
+	constant V_RATE: integer := 25; -- Refresh rate
 	constant N_CALC_UNITS: integer := 12;	-- Number of calculator units. DON'T MODIFY THIS PARAMETER!!!!
 	constant N_GENERATORS: integer := 24;	-- Number of function generators. 
 	constant DATA_WIDTH: integer := 10;	-- DATA bus width, change with caution!!!! (never goes beyond 16!!!)
 	constant ADDR_WIDTH: integer := N_GENERATORS;	-- Address bus width
 	type CONTROLLER_IN_BUS is array (0 to N_GENERATORS-1) of std_logic_vector(DATA_WIDTH-1 downto 0);	-- Generator signal receiver bus
 	type PARAM_BUS is array (0 to N_CALC_UNITS-1) of std_logic_vector(DATA_WIDTH-1 downto 0);	-- Parameters signal receiver bus
+	type PARAM_BUS_EX is array (0 to 2 * N_CALC_UNITS-1) of std_logic_vector(DATA_WIDTH-1 downto 0);	-- Parameters signal receiver bus
 	
 	
 	

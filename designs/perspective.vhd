@@ -10,7 +10,7 @@ use IEEE.fixed_pkg.all;
 entity PSPC is
 	port(
 		reset, clk: in std_logic;
-		X_in, Y_in, Z_in: in float32;
+		X_in, Y_in, Z_in: in float(5 downto -10);
 		
 		-- A and Dmax are unsigned, Sx, Sy and I_in are signed.
 		A, Dmax, Sx, Sy: in std_logic_vector(8-1 downto 0);
@@ -25,16 +25,17 @@ architecture Behavioural of PSPC is
 	-- Input: 3-bit integer part fixed-point
 	-- Output: 2-bit integer part fixed-point
 	signal s_axis_phase_tvalid, m_axis_dout_tvalid: std_logic;
-	signal s_axis_phase_tdata: std_logic_vector(32-1 downto 0);
-	signal m_axis_dout_tdata: std_logic_vector(64-1 downto 0);
+	signal s_axis_phase_tdata: std_logic_vector(16-1 downto 0);
+	signal m_axis_dout_tdata: std_logic_vector(32-1 downto 0);
 	
 	COMPONENT cordic_sinh_cosh
 		PORT (
 			aclk : IN STD_LOGIC;
-			s_axis_phase_tvalid : IN STD_LOGIC;
-			s_axis_phase_tdata : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-			m_axis_dout_tvalid : OUT STD_LOGIC;
-			m_axis_dout_tdata : OUT STD_LOGIC_VECTOR(63 DOWNTO 0) 
+            aresetn : IN STD_LOGIC;
+            s_axis_phase_tvalid : IN STD_LOGIC;
+            s_axis_phase_tdata : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+            m_axis_dout_tvalid : OUT STD_LOGIC;
+            m_axis_dout_tdata : OUT STD_LOGIC_VECTOR(31 DOWNTO 0) 
 		);
 	
 END COMPONENT;
@@ -43,6 +44,7 @@ begin
 	CORD_CALC : cordic_sinh_cosh
 		PORT MAP (
 			aclk => clk,
+			aresetn => not(reset),
 			s_axis_phase_tvalid => s_axis_phase_tvalid,
 			s_axis_phase_tdata => s_axis_phase_tdata,
 			m_axis_dout_tvalid => m_axis_dout_tvalid,
@@ -51,9 +53,9 @@ begin
 
 	-- Core
 	process(reset, clk)
-		variable x_t, y_t, a_t, i_t, sx_t, sy_t, pha, dmax_t, iout_t: float32;
-		variable sinh, cosh: std_logic_vector(32-1 downto 0);
-		variable sinh_t, cosh_t: float32;
+		variable x_t, y_t, a_t, i_t, sx_t, sy_t, pha, dmax_t, iout_t: float(5 downto -10);
+		variable sinh, cosh: std_logic_vector(16-1 downto 0);
+		variable sinh_t, cosh_t: float(5 downto -10);
 	begin
 		if(reset = '1') then
 			X_out <= (others => '0');
@@ -65,22 +67,22 @@ begin
 			s_axis_phase_tvalid <= '1';
 			if(rising_edge(clk)) then
 				-- Normalize
-				a_t := to_float(unsigned(A)) / 2 ** DATA_WIDTH;
-				sx_t := to_float(unsigned(Sx)) / 2 ** DATA_WIDTH;
-				sy_t := to_float(unsigned(Sy)) / 2 ** DATA_WIDTH;
-				dmax_t := to_float(unsigned(Dmax)) / 2 ** DATA_WIDTH;
-				i_t := to_float(unsigned(I_in)) / 2 ** DATA_WIDTH;
+				a_t := to_float(unsigned(A), a_t) / 2 ** DATA_WIDTH;
+				sx_t := to_float(unsigned(Sx), sx_t) / 2 ** DATA_WIDTH;
+				sy_t := to_float(unsigned(Sy), sy_t) / 2 ** DATA_WIDTH;
+				dmax_t := to_float(unsigned(Dmax), dmax_t) / 2 ** DATA_WIDTH;
+				i_t := to_float(unsigned(I_in), i_t) / 2 ** DATA_WIDTH;
 				
 				-- Perspective transformation (camera)
 				x_t := (X_in / Z_in * a_t) + sx_t;
 				y_t := (Y_in / Z_in * a_t) + sy_t;
-				s_axis_phase_tdata <= to_slv(to_sfixed((dmax_t - (Z_in + 1) / 2) / dmax_t * i_t * 2, 2, -29));
+				s_axis_phase_tdata <= to_slv(to_sfixed((dmax_t - (Z_in + 1) / 2) / dmax_t * i_t * 2, 2, -13));
 				
 				-- Calculate the tanh value of the PREVIOUS i
-				sinh := m_axis_dout_tdata(64-1 downto 32);
-				cosh := m_axis_dout_tdata(32-1 downto 0);
-				sinh_t := to_float(to_sfixed(sinh, 1, -30),sinh_t);
-				cosh_t := to_float(to_sfixed(cosh, 1, -30), cosh_t);
+				sinh := m_axis_dout_tdata(32-1 downto 16);
+				cosh := m_axis_dout_tdata(16-1 downto 0);
+				sinh_t := to_float(to_sfixed(sinh, 1, -14),sinh_t);
+				cosh_t := to_float(to_sfixed(cosh, 1, -14), cosh_t);
 				iout_t := sinh_t / cosh_t;
 				
 				-- Output stage, scale Back to the output frame resolution

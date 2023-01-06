@@ -185,7 +185,7 @@ begin
 			ctr_Scanner_Frequency_Reg <= 
 				std_logic_vector(to_unsigned(pha_incr, ctr_Scanner_Frequency_Reg'length));
 			ctr_Scanner_PhaseOff2_Reg <= 
-				std_logic_vector(to_unsigned(to_integer(unsigned(ctr_Scanner_PhaseOff2)) / 360 * pha_incr, ctr_Scanner_PhaseOff2_Reg'length));
+				std_logic_vector(to_unsigned(to_integer(unsigned(ctr_Scanner_PhaseOff2)) mod 360 * 2 ** 16 / 360, ctr_Scanner_PhaseOff2_Reg'length));
 			
 		end if;
 	end process;
@@ -397,16 +397,16 @@ begin
 			-- Translate frequency data into phase increment. 
 			-- This should be an integer value of a ctr_Scanner_Frequency kHz.
 			-- Warning! This fast function generator has a frequency precision of approx. 1.5kHz, 
-			-- That is, the real output frequency = ctr_Scanner_Frequency / 100000 < 100 MHz. 
-			if(unsigned(ctr_Scanner_Frequency) < 100000) then
+			-- That is, the real output frequency = ctr_Scanner_Frequency / 100000 < 20 MHz. 
+			if(unsigned(ctr_Scanner_Frequency) < 20000) then
 				pha_incr := to_integer(unsigned(ctr_Scanner_Frequency)) * 2 ** 16 / 100000;
 			else 
-				pha_incr := 100000 * 2 ** 16 / 100000;
+				pha_incr := 20000 * 2 ** 16 / 100000;
 			end if;
 			ctr_Scanner_Frequency_Reg <= 
 				std_logic_vector(to_unsigned(pha_incr, ctr_Scanner_Frequency_Reg'length));
 			ctr_Scanner_PhaseOff2_Reg <= 
-				std_logic_vector(to_unsigned(to_integer(unsigned(ctr_Scanner_PhaseOff2)) / 360 * pha_incr, ctr_Scanner_PhaseOff2_Reg'length));
+				std_logic_vector(to_unsigned(to_integer(unsigned(ctr_Scanner_PhaseOff2)) mod 360 * 2 ** 16 / 360, ctr_Scanner_PhaseOff2_Reg'length));
 		
 		end if;
 	end process;

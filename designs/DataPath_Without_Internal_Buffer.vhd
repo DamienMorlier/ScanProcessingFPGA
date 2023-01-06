@@ -7,7 +7,8 @@ use work.CONN_MAT_PACKAGE.all;
 entity DataPath is 
 	port(
 		-- Input --------------------------------------------
-		clk, reset, en: in std_logic;	-- clk should be 200 MHz
+		clk, reset, en: in std_logic;	-- clk should be 100 MHz
+		clk_w_11M52, clk_11M52_lckd: in std_logic;         -- clk for frame processor
 		HDMI_VIDEO_PIXEL: in std_logic_vector(24-1 downto 0);
 		
 		-- Function Generator Parameters
@@ -28,6 +29,9 @@ entity DataPath is
 		ctr_Perspective_Shift_X			: in std_logic_vector(8-1 downto 0);--/Sx, signed
 		ctr_Perspective_Shift_Y			: in std_logic_vector(8-1 downto 0);--/Sy, signed
 		
+		-- Stream Video Sync Signals
+		-- vid_clk, vde_out, vsync_out, hsync_out	: in std_logic;
+		
 		-- Connection Matrix Parameters
 		P_PARAM_SEL: in std_logic; -- 1 for loading new coefficients, 0 for latched state
 		P_MULT_IN: in std_logic_vector(10-1 downto 0);
@@ -36,11 +40,12 @@ entity DataPath is
 		WIRING_MODIFIER_PARAM: in std_logic_vector(32 - 1 downto 0);
 		
 		-- Output -------------------------------------------
-		-- Video RGB raw output
-		-- VIDEO_PIXEL_OUT_RGB_RAW: out std_logic_vector(24-1 downto 0);	-- RAW 24bit pixel data
+		-- Divided clock
+		clk_sync: out std_logic;
 		
 		-- Analog controller output
 		Xout, Yout: out std_logic_vector (10-1 downto 0);
+		Xsel, Ysel: out std_logic_vector (10-1 downto 0);
 		Rout, Gout, Bout: out std_logic_vector (8-1 downto 0);
 		Iout: out std_logic_vector (8-1 downto 0);
 		
@@ -80,7 +85,7 @@ architecture behave of DataPath is
 	signal mat_Iout: unsigned (8-1 downto 0);
 	
 	-- Rotation processor
-	signal Xro, Yro, Zro: float32;
+	signal Xro, Yro, Zro: float(5 downto -10);
 	
 begin
 	------------------------------------------------------------------------------
@@ -88,9 +93,13 @@ begin
 	
 	-- Piles of All-purpose Function Generators
 	GEN_SEL: for i in 0 to 32-1 generate
-		GEN_SELECTOR_EN(i) <= 
-			'1' when (to_integer(unsigned(ctr_Gen_Selector)) = i)
-			else '0';
+	   process (clk) begin
+	       if(to_integer(unsigned(ctr_Gen_Selector)) = i) then
+	           GEN_SELECTOR_EN(i) <= '1';
+	       else
+	           GEN_SELECTOR_EN(i) <= '0';
+	       end if;
+	   end process;
 	end generate;
 	
 	-- Mapping the parameters
@@ -104,7 +113,7 @@ begin
 			
 			Gen_probe <= (others => '0');
 		else
-			if(en= '1' and rising_edge(clk)) then
+			if(en= '1') then
 				for i in 0 to N_CALC_UNITS-1 loop
 					if P_PARAM_SEL = '1' then
 						-- Low index high priority. Only set the selected generator with the lowest index
@@ -201,47 +210,51 @@ begin
 			H_blanking => H_blanking, 
 			V_blanking => V_blanking
 		);
-	---------------------------------------------------------------------------------
-	-- Transformers
-	
-	-- Remove the commentary marks if you want to activate them...
-	-- Rotator
-	-- ROTATOR: entity work.ROT(Behavioural)
-		-- port map(
-			-- reset, clk,
-			-- X_mod, Y_mod, Z_mod, 
-			-- X_rot, Y_rot, Z_rot, 
-			-- Xro, Yro, Zro
-		-- );
-	
-	-- Perspective processor
-	-- PP: entity work.PSPC(Behavioural)
-		-- port map(
-			-- reset, clk, 
-			-- Xro, Yro, Zro, 
-			-- ctr_Perspective_Distance, ctr_Distance_Limit, ctr_Perspective_Shift_X, ctr_Perspective_Shift_Y, 
-			-- std_logic_vector(buffer_Iout), 
-			-- ctr_FrameBuffer_X_Sel, ctr_FrameBuffer_Y_Sel, Iout
-		-- );
 		
 	-- For debugging only!!
 	ctr_FrameBuffer_X_Sel <= X_mod;
 	ctr_FrameBuffer_Y_Sel <= Y_mod;
 	
+	---------------------------------------------------------------------------------
+	-- Transformers
+	
+	 --Remove the commentary marks if you want to activate them...
+	 --Rotator
+--	 ROTATOR: entity work.ROT(Behavioural)
+--		 port map(
+--			 reset, clk,
+--			 X_mod, Y_mod, Z_mod, 
+--			 X_rot, Y_rot, Z_rot, 
+--			 Xro, Yro, Zro
+--		 );
+	
+	-- Perspective processor
+--	 PP: entity work.PSPC(Behavioural)
+--		 port map(
+--			 reset, clk, 
+--			 Xro, Yro, Zro, 
+--			 ctr_Perspective_Distance, ctr_Distance_Limit, ctr_Perspective_Shift_X, ctr_Perspective_Shift_Y, 
+--			 std_logic_vector(buffer_Iout), 
+--			 ctr_FrameBuffer_X_Sel, ctr_FrameBuffer_Y_Sel, Iout
+--		 );
+	
 	--------------------------------------------------------------------
 	-- Frame Transformer router
+    	
 	FRAME_TR: entity work.FRAME_TRANS(behave)
 		port map(
 			clk, en, reset,
 			HDMI_VIDEO_PIXEL, 
+			--vid_clk, vde_out, vsync_out, hsync_out,
 			ctr_FrameBuffer_X_Sel, ctr_FrameBuffer_Y_Sel,
 			ctr_FrameBuffer_Zoom,
 			ctr_FrameBuffer_H_Position, ctr_FrameBuffer_V_Position, 
 			ctr_FrameBuffer_H_Blanking, ctr_FrameBuffer_V_Blanking,
-			buffer_Xout, buffer_Yout, 
+			buffer_Xout, buffer_Yout,
 			buffer_Rout, buffer_Gout, buffer_Bout, 
 			buffer_Iout
 		);
+	clk_sync <= clk_w_11M52;
 	
 	-- Analog output stage
 	ANA_OUT: process(reset, clk, en) begin
@@ -254,11 +267,17 @@ begin
             Iout <= (others => '0');
         else
             if(rising_edge(clk) and en = '1') then
+                -- For testing
+                --Xout <= std_logic_vector(ctr_FrameBuffer_X_Sel); Yout <= std_logic_vector(ctr_FrameBuffer_Y_Sel); 
+                
                 Xout <= std_logic_vector(buffer_Xout); Yout <= std_logic_vector(buffer_Yout); 
                 Rout <= std_logic_vector(buffer_Rout); Gout <= std_logic_vector(buffer_Gout); Bout <= std_logic_vector(buffer_Bout);
 				Iout <= std_logic_vector(buffer_Iout);
             end if;
         end if;
     end process;
-	        
+    
+    Xsel <= ctr_FrameBuffer_X_Sel;
+    Ysel <= ctr_FrameBuffer_Y_Sel;
+	
 end behave; 
