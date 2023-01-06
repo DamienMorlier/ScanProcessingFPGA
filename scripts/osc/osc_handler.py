@@ -28,18 +28,18 @@ class OSCHandler:
         self._server = osc_server.ThreadingOSCUDPServer((self._ip_addr, self._port), self._dispatcher)
         self._server.serve_forever()
 
-    def getFuncGen(self, addr: str):
+    def parseAddr(self, addr: str, index: int):
         number = ""
-        i = 11
+        i = index
         while addr[i] != "/":
             number += addr[i]
             i += 1
         return int(number)
 
     def Sync(self, addr: str, data):
-        funcGen = self.getFuncGen(addr)
+        funcGen = self.parseAddr(addr, 11)
         try:
-            print(f"{addr} FuncGen {funcGen} selected, new value : {data}")
+            print(f"triggered address :{addr} ; FuncGen {funcGen} selected")
             # self.driver.selectFuncGen(funcGen)
             # TODO : I don't know what it is supposed to do
             # self.driver.deselectFuncGen()
@@ -48,7 +48,7 @@ class OSCHandler:
         return
 
     def Harmonic(self, addr: str, data: List[Any]):
-        funcGen = self.getFuncGen(addr)
+        funcGen = self.parseAddr(addr, 11)
         try:
             print(f"{addr} FuncGen {funcGen} selected, new value : {data}")
             # self.driver.selectFuncGen(funcGen)
@@ -59,9 +59,9 @@ class OSCHandler:
         return
 
     def Frequency(self, addr: str, data: List[Any]):
-        funcGen = self.getFuncGen(addr)
+        funcGen = self.parseAddr(addr, 11)
         try:
-            print(f"{addr} FuncGen {funcGen} selected, new value : {data}")
+            print(f"triggered address :{addr} ; FuncGen {funcGen} selected; f : {data}")
             # self.driver.selectFuncGen(funcGen)
             # self.driver.setFrequency(data)
             # self.driver.deselectFuncGen()
@@ -70,9 +70,9 @@ class OSCHandler:
         return
 
     def Scale(self, addr: str, data: List[Any]):
-        funcGen = self.getFuncGen(addr)
+        funcGen = self.parseAddr(addr, 11)
         try:
-            print(f"{addr} FuncGen {funcGen} selected, new value : {data}")
+            print(f"triggered address :{addr} ; FuncGen {funcGen} selected")
             # self.driver.selectFuncGen(funcGen)
             # self.driver.setScale(1, data)
             # self.driver.deselectFuncGen()
@@ -81,7 +81,7 @@ class OSCHandler:
         return
 
     def Phase(self, addr: str, data: List[Any]):
-        funcGen = self.getFuncGen(addr)
+        funcGen = self.parseAddr(addr, 11)
         try:
             print(f"{addr} FuncGen {funcGen} selected, new value : {data}")
             # self.driver.selectFuncGen(funcGen)
@@ -92,7 +92,7 @@ class OSCHandler:
         return
 
     def Offset(self, addr: str, data: List[Any]):
-        funcGen = self.getFuncGen(addr)
+        funcGen = self.parseAddr(addr, 11)
         try:
             print(f"{addr} FuncGen {funcGen} selected, new value : {data}")
             # self.driver.selectFuncGen(funcGen)
@@ -103,7 +103,7 @@ class OSCHandler:
         return
 
     def Waveform(self, addr: str, data: List[Any]):
-        funcGen = self.getFuncGen(addr)
+        funcGen = self.parseAddr(addr, 11)
         try:
             print(f"{addr} FuncGen {funcGen} selected, new value : {data}")
             # self.driver.selectFuncGen(funcGen)
@@ -114,7 +114,7 @@ class OSCHandler:
         return
 
     def Blanking_Width(self, addr: str, data: List[Any]):
-        funcGen = self.getFuncGen(addr)
+        funcGen = self.parseAddr(addr, 11)
         try:
             print(f"{addr} FuncGen {funcGen} selected, new value : {data}")
             # self.driver.selectFuncGen(funcGen)
@@ -125,7 +125,7 @@ class OSCHandler:
         return
 
     def Blanking_Phase(self, addr: str, data: List[Any]):
-        funcGen = self.getFuncGen(addr)
+        funcGen = self.parseAddr(addr, 11)
         try:
             print(f"{addr} FuncGen {funcGen} selected, new value : {data}")
             # self.driver.selectFuncGen(funcGen)
@@ -143,5 +143,26 @@ class OSCHandler:
             print(f"{addr} : {channel}, {funcGen}, {data}")
             #self.driver.Wiring_Modifier_Param(channel, data, funcGen)
             #self.driver.Wiring_Modifier_Deactive()
+        except:
+            self.client.send_message("/error", "")
+
+    def Modifier(self, addr: str, data: List[Any]):
+        channel = self.parseAddr(addr, 8)
+        b1 = data[0]
+        b2 = data[1]
+        try:
+            print(f"triggered address :{addr} ; channel : {channel}; b : {b1} , {b2}")
+            #TODO : I don't know what to do with that
+        except:
+            self.client.send_message("/error", "")
+
+    def Connection(self, addr: str, data: List[Any]):
+        channel = self.parseAddr(addr, 8)
+        f1 = data[0]
+        f2 = data[1]
+        f3 = data[2]
+        try:
+            print(f"triggered address :{addr} ; channel : {channel} ; f : {f1} , {f2} , {f3}")
+            #TODO : I don't know what to do with that
         except:
             self.client.send_message("/error", "")

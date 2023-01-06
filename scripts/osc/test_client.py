@@ -1,11 +1,16 @@
 from pythonosc.udp_client import SimpleUDPClient
 import random
 
-params = ["/sync", "/harmonic", "/frequency", "/scale", "/phase", "/offset", "/waveform"]
+params = ["sync", "harmonic", "frequency", "scale", "phase", "offset", "waveform", "blanking_width", "blanking_phase"]
 
-client = SimpleUDPClient("192.168.2.99", 5005)
+client = SimpleUDPClient("127.0.0.1", 5005)
 
-client.send_message("/matrix/F/0", [[50, 100]])
-client.send_message("/generator/229/sync", [[50, 100]])
-client.send_message("/generator/29/blanking_width", [[50, 100]])
+print("triggering address : /generator/15/frequency")
+client.send_message("/generator/15/frequency", [50])
+print("triggering address : /generator/22/scale")
+client.send_message("/generator/22/scale", [50])
+print("triggering address : /wiring/8/modifier")
+client.send_message("/wiring/8/modifier", [[50, 100]])
+print("triggering address : /wiring/2/connection")
+client.send_message("/wiring/2/connection", [[50, 100, 1]])
 
