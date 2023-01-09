@@ -24,7 +24,7 @@ architecture test of DCO_test_bench is
     --Declaration of the internal  signals used in the testbench
     signal int_clock       	    :  std_logic := '0';
 	signal int_reset     		:  std_logic := '0';
-	signal real_frequency 	    :  integer;
+	signal real_frequency 	    :  integer := 10;
 	signal int_ramp_out      	:  integer;
 
   
@@ -44,17 +44,12 @@ architecture test of DCO_test_bench is
 
   stimuli_generator: process
   begin
-  wait for 5*clockcycle;
+  wait for 15*clockcycle;
+  int_reset <= '1';
   wait for clockcycle;
-  wait for clockcycle;
-  int_reset <='1';
-  wait for clockcycle;
-  int_reset <='0';
-  wait until rising_edge(int_clock);
-  wait for clockcycle;
-
-  wait for 10*clockcycle;
+  int_reset <= '0';
+  wait for 20*clockcycle;
   --Raise a deliberate failure to stop execution
-
+  assert false report "TESTBENCH FINISHED, raising a Failure to stop" severity failure;
   end process;
   end test;
