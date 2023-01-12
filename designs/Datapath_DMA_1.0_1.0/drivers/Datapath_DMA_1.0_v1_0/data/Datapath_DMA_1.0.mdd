@@ -1,0 +1,10 @@
+
+
+OPTION psf_version = 2.1;
+
+BEGIN DRIVER Datapath_DMA_1.0
+	OPTION supported_peripherals = (Datapath_DMA_1.0);
+	OPTION copyfiles = all;
+	OPTION VERSION = 1.0;
+	OPTION NAME = Datapath_DMA_1.0;
+END DRIVER
