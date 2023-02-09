@@ -48,7 +48,13 @@
           "min_clearance": 0.0
         }
       },
-      "diff_pair_dimensions": [],
+      "diff_pair_dimensions": [
+        {
+          "gap": 0.0,
+          "via_gap": 0.0,
+          "width": 0.0
+        }
+      ],
       "drc_exclusions": [],
       "meta": {
         "version": 2
@@ -112,8 +118,20 @@
         "solder_mask_min_width": 0.0,
         "use_height_for_length_calcs": true
       },
-      "track_widths": [],
-      "via_dimensions": [],
+      "track_widths": [
+        0.0,
+        0.3
+      ],
+      "via_dimensions": [
+        {
+          "diameter": 0.0,
+          "drill": 0.0
+        },
+        {
+          "diameter": 0.7,
+          "drill": 0.35
+        }
+      ],
       "zones_allow_external_fillets": false,
       "zones_use_no_outline": true
     },
@@ -416,16 +434,76 @@
       ""
     ],
     [
-      "374ccb31-dc0d-4191-a174-4c25d2ed3c8c",
-      "Level Shifter R"
+      "840f9249-9532-4e06-b1bb-06be42dfbb62",
+      "level_shifter_2channel1"
     ],
     [
-      "d504f7e7-9eec-491e-9d57-648cd7e88c4b",
-      "Level Shifter B"
+      "840f9249-9532-4e06-b1bb-06be42dfbb62",
+      "level_shifter_2channel1"
     ],
     [
-      "61399380-c75b-4631-b270-6aaa4fdc8118",
-      "Level Shifter G"
+      "b4898b6a-1000-40dd-933a-6e1283455ae5",
+      "level_shifter_2channel2"
+    ],
+    [
+      "b4898b6a-1000-40dd-933a-6e1283455ae5",
+      "level_shifter_2channel2"
+    ],
+    [
+      "001e668a-cddb-4b33-ac25-806d02f96d27",
+      "level_shifter_2channel3"
+    ],
+    [
+      "001e668a-cddb-4b33-ac25-806d02f96d27",
+      "level_shifter_2channel3"
+    ],
+    [
+      "63d06509-451c-47fe-a6b4-903b053041e7",
+      "level_shifter_2channel4"
+    ],
+    [
+      "63d06509-451c-47fe-a6b4-903b053041e7",
+      "level_shifter_2channel4"
+    ],
+    [
+      "9bb303e7-2d26-44aa-9f7f-9769b35b759c",
+      "level_shifter_2channel5"
+    ],
+    [
+      "9bb303e7-2d26-44aa-9f7f-9769b35b759c",
+      "level_shifter_2channel5"
+    ],
+    [
+      "43f72e4b-8646-4e37-984e-c6026129efb2",
+      "level_shifter_parallell_inv"
+    ],
+    [
+      "3d400da7-e319-4cdd-a7e5-2c91e9871d87",
+      "level_shifter_2channel6"
+    ],
+    [
+      "48c7a178-7ef3-416e-9274-c87a9321daf4",
+      "level_shifter_2channel7"
+    ],
+    [
+      "3cf7c407-e339-4efe-a631-f8337ce0a49e",
+      "level_shifter_2channel8"
+    ],
+    [
+      "f2399b9c-ee02-4c1b-8e6f-66af2e7d9aeb",
+      "level_shifter_2channel9"
+    ],
+    [
+      "430f4995-a974-41d2-8b66-e6eb1399d3b5",
+      "level_shifter_parallell1"
+    ],
+    [
+      "6cdd7ab4-7b3a-4741-b4e8-e37bfc91a0a8",
+      "level_shifter16"
+    ],
+    [
+      "02829764-aaa8-41d6-ae32-1bc49427c573",
+      "level_shifter_parallell8"
     ]
   ],
   "text_variables": {}
