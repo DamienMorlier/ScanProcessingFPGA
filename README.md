@@ -163,6 +163,6 @@ Here is a list of modules that could be implemented to enhance the experience on
 
 ## Ressources
 
-- Detailed description of the OSC implemented : https://www.overleaf.com/read/ynmztfjhcprb
+- Detailed description of the OSC implemented : https://www.overleaf.com/read/kcfczwsqqrff
 
 - Technical Report : 
