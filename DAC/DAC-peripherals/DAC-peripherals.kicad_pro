@@ -438,14 +438,6 @@
       "level_shifter_2channel1"
     ],
     [
-      "840f9249-9532-4e06-b1bb-06be42dfbb62",
-      "level_shifter_2channel1"
-    ],
-    [
-      "b4898b6a-1000-40dd-933a-6e1283455ae5",
-      "level_shifter_2channel2"
-    ],
-    [
       "b4898b6a-1000-40dd-933a-6e1283455ae5",
       "level_shifter_2channel2"
     ],
@@ -454,20 +446,8 @@
       "level_shifter_2channel3"
     ],
     [
-      "001e668a-cddb-4b33-ac25-806d02f96d27",
-      "level_shifter_2channel3"
-    ],
-    [
       "63d06509-451c-47fe-a6b4-903b053041e7",
       "level_shifter_2channel4"
-    ],
-    [
-      "63d06509-451c-47fe-a6b4-903b053041e7",
-      "level_shifter_2channel4"
-    ],
-    [
-      "9bb303e7-2d26-44aa-9f7f-9769b35b759c",
-      "level_shifter_2channel5"
     ],
     [
       "9bb303e7-2d26-44aa-9f7f-9769b35b759c",
@@ -504,6 +484,26 @@
     [
       "02829764-aaa8-41d6-ae32-1bc49427c573",
       "level_shifter_parallell8"
+    ],
+    [
+      "b241b0da-38ad-4481-85fa-82fd0992d8c4",
+      "level_shifter_2channel1"
+    ],
+    [
+      "b8ad2657-48f3-4890-bcc1-7aeb9e49bd89",
+      "level_shifter_2channel2"
+    ],
+    [
+      "95235ebf-718c-4185-b081-8eda4dd469f8",
+      "level_shifter_2channel3"
+    ],
+    [
+      "7c969d49-ea77-4b1d-b3a4-90f756d2da11",
+      "level_shifter_2channel4"
+    ],
+    [
+      "974c7cdb-512b-4035-952f-b0cdbd2e6958",
+      "level_shifter_2channel5"
     ]
   ],
   "text_variables": {}
